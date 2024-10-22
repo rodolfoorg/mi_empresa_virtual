@@ -1,0 +1,48 @@
+# Comandos útiles de Django
+
+#Activar el venv
+source venv/Scripts/activate
+
+# Levantar el servidor de desarrollo
+python manage.py runserver
+
+# Crear migraciones
+python manage.py makemigrations
+
+# Aplicar migraciones
+python manage.py migrate
+
+# Crear superusuario
+python manage.py createsuperuser
+
+# Abrir shell de Django
+python manage.py shell
+
+# Recolectar archivos estáticos
+python manage.py collectstatic
+
+# Crear una nueva aplicación
+python manage.py startapp nombre_de_la_app
+
+# Listar todas las migraciones
+python manage.py showmigrations
+
+# Verificar problemas en el proyecto
+python manage.py check
+
+# Limpiar la base de datos (genera SQL)
+python manage.py sqlflush
+
+# Revertir todas las migraciones de una app
+python manage.py migrate nombre_de_la_app zero
+
+# Crear un nuevo proyecto Django
+django-admin startproject nombre_del_proyecto
+
+# Ejecutar tests
+python manage.py test
+
+# Ver la versión de Django
+python -m django --version
+
+# Nota: Si estás usando Python 3 específicamente, podrías necesitar usar 'python3' en lugar de 'python'

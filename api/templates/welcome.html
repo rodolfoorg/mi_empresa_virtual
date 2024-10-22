@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenido a Mi Empresa Virtual API</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300&family=Roboto:wght@400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Quicksand", sans-serif;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #fff;
+            width: 100%;
+            overflow: hidden;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .ring {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto; /* Centrar los anillos */
+        }
+        .ring i {
+            position: absolute;
+            inset: 0;
+            border: 2px solid #000;
+            transition: 0.5s;
+        }
+        .ring i:nth-child(1) {
+            border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+            animation: animate 6s linear infinite;
+        }
+        .ring i:nth-child(2) {
+            border-radius: 41% 44% 56% 59%/38% 62% 63% 37%;
+            animation: animate 4s linear infinite;
+        }
+        .ring i:nth-child(3) {
+            border-radius: 41% 44% 56% 59%/38% 62% 63% 37%;
+            animation: animate2 10s linear infinite;
+        }
+        .ring:hover i {
+            border: 6px solid var(--clr);
+            filter: drop-shadow(0 0 20px var(--clr));
+        }
+        @keyframes animate {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        @keyframes animate2 {
+            0% {
+                transform: rotate(360deg);
+            }
+            100% {
+                transform: rotate(0deg);
+            }
+        }
+        .content {
+            width: 80%;
+            max-width: 800px;
+            text-align: center;
+        }
+        .content h1 {
+            font-size: 3em;
+            color: #000;
+            margin-bottom: 10px;
+            text-align: center; /* Centrar el título */
+        }
+        .content h2 {
+            font-size: 2.5em;
+            color: #000;
+            margin-bottom: 20px;
+            font-family: "Roboto", sans-serif;
+        }
+        .content p {
+            color: #000;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            font-family: "Roboto", sans-serif;
+        }
+        .content ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+        .content ul li {
+            margin: 10px 0;
+        }
+        .content ul li a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.1em;
+            display: inline-block;
+            padding: 10px 20px;
+            border: 2px solid #000;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            position: relative;
+            background-color: #007bff;
+        }
+        .content ul li a::after {
+            content: '→';
+            position: absolute;
+            right: -20px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .content ul li a:hover {
+            background-color: #0056b3;
+            color: #fff;
+        }
+        .content ul li a:hover::after {
+            right: 10px;
+            opacity: 1;
+        }
+        .footer {
+            margin-top: 20px;
+            color: #000;
+            font-size: 0.9em;
+            font-family: "Roboto", sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <div class="ring">
+            <i style="--clr:#00ff0a;"></i>
+            <i style="--clr:#ff0057;"></i>
+            <i style="--clr:#fffd44;"></i>
+            <h1>Mi Empresa Virtual</h1>
+        </div>
+        <h2>API</h2>
+        <p>Esta es la documentación de nuestra API. Aquí encontrarás enlaces útiles:</p>
+        <ul>
+            <li><a href="/api/urls">urls</a></li>
+        </ul>
+        <p>Administración:</p>
+        <ul>
+            <li><a href="/admin" style="background-color: #28a745;">admin</a></li>
+        </ul>
+        <div class="footer">
+            <p>&copy; 2023 Mi Empresa Virtual. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>
