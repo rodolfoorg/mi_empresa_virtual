@@ -12,7 +12,5 @@ router.register(r'tarjetas', TarjetaViewSet)
 router.register(r'contactos', ContactoViewSet)
 
 urlpatterns = [
-    path('', api_welcome, name='api-welcome'),
     path('', include(router.urls)),
-    path('urls', include(router.urls)),
 ]
