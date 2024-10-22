@@ -4,34 +4,34 @@ from api.models import *
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Producto
-        fields = ['id', 'nombre', 'precio']  
+        fields = '__all__'  
 
 class VentaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Venta
-        fields = ['id', 'fecha', 'cantidad', 'precio_unitario', 'negocio', 'producto']  
+        fields = '__all__'  
 
 class NegocioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Negocio
-        fields = ['id', 'usuario', 'nombre']  
+        fields = '__all__'  
 
 class CompraSerializer(serializers.ModelSerializer):
     class Meta:
         model = Compra
-        fields = ['id', 'negocio', 'producto', 'fecha', 'cantidad', 'precio_unitario']  
+        fields = '__all__'  
 
 class EfectivoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Efectivo
-        fields = ['id', 'usuario', 'cantidad']  
+        fields = '__all__'  
 
 class TarjetaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tarjeta
-        fields = ['id', 'usuario', 'nombre', 'numero', 'saldo']  
+        fields = '__all__'  
 
 class ContactoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contacto
-        fields = ['id', 'usuario', 'nombre', 'numero', 'es_cliente', 'es_proveedor']  
+        fields = '__all__'  
