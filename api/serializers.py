@@ -1,37 +1,37 @@
 from rest_framework import serializers
 from api.models import *
 
-class ProductoSerializer(serializers.ModelSerializer):
+class ProductSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Producto
+        model = Product
         fields = '__all__'  
 
-class VentaSerializer(serializers.ModelSerializer):
+class SaleSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Venta
+        model = Sale
         fields = '__all__'  
 
-class NegocioSerializer(serializers.ModelSerializer):
+class BusinessSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Negocio
+        model = Business
         fields = '__all__'  
 
-class CompraSerializer(serializers.ModelSerializer):
+class PurchaseSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Compra
+        model = Purchase
         fields = '__all__'  
 
-class EfectivoSerializer(serializers.ModelSerializer):
+class CashSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Efectivo
+        model = Cash
         fields = '__all__'  
 
-class TarjetaSerializer(serializers.ModelSerializer):
+class CardSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Tarjeta
+        model = Card
         fields = '__all__'  
 
-class ContactoSerializer(serializers.ModelSerializer):
+class ContactSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Contacto
+        model = Contact
         fields = '__all__'  

@@ -3,33 +3,33 @@ from api.models import *
 from .serializers import *
 from django.shortcuts import render
 
-class ProductoViewSet(viewsets.ModelViewSet):
-    queryset = Producto.objects.all()
-    serializer_class = ProductoSerializer
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
 
-class VentaViewSet(viewsets.ModelViewSet):
-    queryset = Venta.objects.all()
-    serializer_class = VentaSerializer
+class SaleViewSet(viewsets.ModelViewSet):
+    queryset = Sale.objects.all()
+    serializer_class = SaleSerializer
 
-class NegocioViewSet(viewsets.ModelViewSet):
-    queryset = Negocio.objects.all()
-    serializer_class = NegocioSerializer
+class BusinessViewSet(viewsets.ModelViewSet):
+    queryset = Business.objects.all()
+    serializer_class = BusinessSerializer
 
-class CompraViewSet(viewsets.ModelViewSet):
-    queryset = Compra.objects.all()
-    serializer_class = CompraSerializer
+class PurchaseViewSet(viewsets.ModelViewSet):
+    queryset = Purchase.objects.all()
+    serializer_class = PurchaseSerializer
 
-class EfectivoViewSet(viewsets.ModelViewSet):
-    queryset = Efectivo.objects.all()
-    serializer_class = EfectivoSerializer
+class CashViewSet(viewsets.ModelViewSet):
+    queryset = Cash.objects.all()
+    serializer_class = CashSerializer
 
-class TarjetaViewSet(viewsets.ModelViewSet):
-    queryset = Tarjeta.objects.all()
-    serializer_class = TarjetaSerializer
+class CardViewSet(viewsets.ModelViewSet):
+    queryset = Card.objects.all()
+    serializer_class = CardSerializer
 
-class ContactoViewSet(viewsets.ModelViewSet):
-    queryset = Contacto.objects.all()
-    serializer_class = ContactoSerializer
+class ContactViewSet(viewsets.ModelViewSet):
+    queryset = Contact.objects.all()
+    serializer_class = ContactSerializer
 
 def api_welcome(request):
     return render(request, 'welcome.html')
