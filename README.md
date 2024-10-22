@@ -70,6 +70,9 @@ Las contribuciones son bienvenidas. Por favor, abre un issue para discutir los c
 ### Activar el venv
 source venv/Scripts/activate
 
+### Guardar dependencias en requirements.txt
+pip freeze > requirements.txt
+
 ### Comandos útiles de Django
 
 #### Levantar el servidor de desarrollo
