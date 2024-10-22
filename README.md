@@ -39,6 +39,7 @@ Mi Empresa Virtual API es una aplicación backend desarrollada con Django Rest F
    python manage.py makemigrations
    python manage.py migrate
    ```
+   Si tienes problemas con las migraciones, borra el archivo `db.sqlite3` y las migraciones(migrations) que tengan el tipo `0001_initial.py`, `0002_initial.py`, etc.
 
 5. Crea un superusuario:
    ``` ```bash
