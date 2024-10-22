@@ -12,20 +12,16 @@ class Producto(models.Model):
     stock = models.PositiveIntegerField(default=0)
 
 class Venta(models.Model):
-    negocio = models.ForeignKey(Negocio, on_delete=models.CASCADE)
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     fecha = models.DateTimeField(auto_now_add=True)
     cantidad = models.PositiveIntegerField()
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-    
 
 class Compra(models.Model):
-    negocio = models.ForeignKey(Negocio, on_delete=models.CASCADE)
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     fecha = models.DateTimeField(auto_now_add=True)
     cantidad = models.PositiveIntegerField()
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-    
 
 class Efectivo(models.Model):
     usuario = models.OneToOneField(User, on_delete=models.CASCADE)
