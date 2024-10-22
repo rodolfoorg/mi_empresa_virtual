@@ -39,10 +39,10 @@ Mi Empresa Virtual API es una aplicación backend desarrollada con Django Rest F
    python manage.py makemigrations
    python manage.py migrate
    ```
-   Si tienes problemas con las migraciones, borra el archivo `db.sqlite3` y las migraciones(migrations) que tengan el tipo `0001_initial.py`, `0002_*.py`, etc.
+   Si tienes problemas con las migraciones, borra el archivo `db.sqlite3` y las migraciones (migrations) que tengan el tipo `0001_initial.py`, `0002_*.py`, etc.
 
 5. Crea un superusuario:
-   ``` ```bash
+   ```bash
    python manage.py createsuperuser
    ```
 
@@ -65,54 +65,51 @@ Accede a la API a través de `http://localhost:8000/api/`. Los endpoints disponi
 ## Contribuir
 Las contribuciones son bienvenidas. Por favor, abre un issue para discutir los cambios propuestos antes de realizar un pull request.
 
-#comandos utiles
+## Comandos útiles
 
-#Activar el venv
+### Activar el venv
 source venv/Scripts/activate
 
-# Comandos útiles de Django
+### Comandos útiles de Django
 
-# Levantar el servidor de desarrollo
+#### Levantar el servidor de desarrollo
 python manage.py runserver
 
-# Crear migraciones
+#### Crear migraciones
 python manage.py makemigrations
 
-# Aplicar migraciones
+#### Aplicar migraciones
 python manage.py migrate
 
-# Crear superusuario
+#### Crear superusuario
 python manage.py createsuperuser
 
-# Abrir shell de Django
+#### Abrir shell de Django
 python manage.py shell
 
-# Recolectar archivos estáticos
+#### Recolectar archivos estáticos
 python manage.py collectstatic
 
-# Crear una nueva aplicación
+#### Crear una nueva aplicación
 python manage.py startapp nombre_de_la_app
 
-# Listar todas las migraciones
+#### Listar todas las migraciones
 python manage.py showmigrations
 
-# Verificar problemas en el proyecto
+#### Verificar problemas en el proyecto
 python manage.py check
 
-# Limpiar la base de datos (genera SQL)
+#### Limpiar la base de datos (genera SQL)
 python manage.py sqlflush
 
-# Revertir todas las migraciones de una app
+#### Revertir todas las migraciones de una app
 python manage.py migrate nombre_de_la_app zero
 
-# Crear un nuevo proyecto Django
+#### Crear un nuevo proyecto Django
 django-admin startproject nombre_del_proyecto
 
-# Ejecutar tests
+#### Ejecutar tests
 python manage.py test
 
-# Ver la versión de Django
+#### Ver la versión de Django
 python -m django --version
-
-
-
