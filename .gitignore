@@ -1,12 +1,6 @@
 # Ignorar la base de datos SQLite
 db.sqlite3
 
-# Ignorar la carpeta migrations
-**/migrations/
-
-# Excepciones: no ignorar los archivos __init__.py en las carpetas migrations
-!**/migrations/__init__.py
-
 # Otros archivos y carpetas comunes para ignorar en proyectos Django
 *.pyc
 __pycache__/
