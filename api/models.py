@@ -6,6 +6,7 @@ class Business(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(default=timezone.now, blank=True)
+    image = models.ImageField(upload_to='business_images/', null=True, blank=True)
 
 class Product(models.Model):
     business = models.ForeignKey(Business, on_delete=models.CASCADE)
@@ -13,16 +14,18 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now, blank=True)
+    image = models.ImageField(upload_to='product_images/', null=True, blank=True)
 
 class Contact(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     number = models.CharField(max_length=15)
-    is_customer = models.BooleanField(default=False)
+    is_customer = models.BooleanField(default=True)
     is_supplier = models.BooleanField(default=False)
     debt = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     credit = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created_at = models.DateTimeField(default=timezone.now, blank=True)
+    image = models.ImageField(upload_to='contact_images/', null=True, blank=True)
 
 class Sale(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
