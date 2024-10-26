@@ -22,8 +22,6 @@ class Contact(models.Model):
     number = models.CharField(max_length=15)
     is_customer = models.BooleanField(default=True)
     is_supplier = models.BooleanField(default=False)
-    debt = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    credit = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created_at = models.DateTimeField(default=timezone.now, blank=True)
     image = models.ImageField(upload_to='contact_images/', null=True, blank=True)
 
@@ -34,6 +32,7 @@ class Sale(models.Model):
     quantity = models.PositiveIntegerField()
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(default=timezone.now, blank=True)
+    is_credit = models.BooleanField(default=False)
 
 class Purchase(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -42,6 +41,7 @@ class Purchase(models.Model):
     quantity = models.PositiveIntegerField()
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(default=timezone.now, blank=True)
+    is_credit = models.BooleanField(default=False)
 
 class Cash(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

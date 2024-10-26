@@ -11,3 +11,4 @@ env/
 venv/
 *.log
 local_settings.py
+/media
