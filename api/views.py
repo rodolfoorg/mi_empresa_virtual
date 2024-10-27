@@ -9,6 +9,9 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+import logging
+
+logger = logging.getLogger(__name__)
 
 class BusinessViewSet(viewsets.ModelViewSet):
     queryset = Business.objects.all()
@@ -91,3 +94,13 @@ class LogoutView(APIView):
     def post(self, request):
         request.user.auth_token.delete()
         return Response(status=status.HTTP_200_OK)
+
+class RegisterView(APIView):
+    def post(self, request):
+        logger.info(f"Received data: {request.data}")
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Usuario creado exitosamente"}, status=status.HTTP_201_CREATED)
+        logger.error(f"Serializer errors: {serializer.errors}")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
