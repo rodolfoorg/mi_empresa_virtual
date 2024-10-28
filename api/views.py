@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import *
 from .serializers import *
 from .permissions import IsOwnerOrNoAccess
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class BusinessViewSet(viewsets.ModelViewSet):
     queryset = Business.objects.all()
     serializer_class = BusinessSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess, HasValidLicense]
+    permission_classes = [ IsOwnerOrNoAccess, HasValidLicense]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -28,7 +28,7 @@ class BusinessViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess, HasValidLicense]
+    permission_classes = [ IsOwnerOrNoAccess, HasValidLicense]
 
     def get_queryset(self):
         return Product.objects.filter(business__user=self.request.user)
@@ -119,3 +119,21 @@ class RegisterView(APIView):
             return Response({"message": "Usuario creado exitosamente"}, status=status.HTTP_201_CREATED)
         logger.error(f"Serializer errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        # Solo retorna productos de negocios públicos
+        return Product.objects.filter(business__is_public=True)
+
+class PublicBusinessViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Business.objects.all()
+    serializer_class = BusinessSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        # Solo retorna negocios públicos
+        return Business.objects.filter(is_public=True)

@@ -11,6 +11,8 @@ router.register(r'cash', CashViewSet)
 router.register(r'cards', CardViewSet)
 router.register(r'contacts', ContactViewSet)
 router.register(r'licenses', LicenseViewSet)
+router.register(r'public-products', PublicProductViewSet, basename='public-products')
+router.register(r'public-businesses', PublicBusinessViewSet, basename='public-businesses')
 urlpatterns = [
     path('', include(router.urls)),
     path('register/', RegisterView.as_view(), name='register'),
