@@ -63,10 +63,13 @@ class Card(models.Model):
     balance = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(default=timezone.now, blank=True)
 
+def get_expiration_date():
+    return timezone.now() + timezone.timedelta(minutes=40320)
+
 class License(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     is_pro = models.BooleanField(default=False)
     start_date = models.DateTimeField(default=timezone.now)
-    expiration_date = models.DateTimeField(default=timezone.now() + timezone.timedelta(minutes=40320))
+    expiration_date = models.DateTimeField(default=get_expiration_date)
     active = models.BooleanField(default=True)
     notes = models.TextField(blank=True, null=True)
