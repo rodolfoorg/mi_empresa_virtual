@@ -9,6 +9,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from .licencePersmission import HasValidLicense
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 class BusinessViewSet(viewsets.ModelViewSet):
     queryset = Business.objects.all()
     serializer_class = BusinessSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess]
+    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess, HasValidLicense]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -27,7 +28,7 @@ class BusinessViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess]
+    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess, HasValidLicense]
 
     def get_queryset(self):
         return Product.objects.filter(business__user=self.request.user)
@@ -35,7 +36,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 class SaleViewSet(viewsets.ModelViewSet):
     queryset = Sale.objects.all()
     serializer_class = SaleSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess]
+    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess, HasValidLicense]
 
     def get_queryset(self):
         return Sale.objects.filter(product__business__user=self.request.user)
@@ -43,7 +44,7 @@ class SaleViewSet(viewsets.ModelViewSet):
 class PurchaseViewSet(viewsets.ModelViewSet):
     queryset = Purchase.objects.all()
     serializer_class = PurchaseSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess]
+    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess, HasValidLicense]
 
     def get_queryset(self):
         return Purchase.objects.filter(product__business__user=self.request.user)
@@ -51,7 +52,7 @@ class PurchaseViewSet(viewsets.ModelViewSet):
 class CashViewSet(viewsets.ModelViewSet):
     queryset = Cash.objects.all()
     serializer_class = CashSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess]
+    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess, HasValidLicense]
 
     def get_queryset(self):
         return Cash.objects.filter(user=self.request.user)
@@ -59,7 +60,7 @@ class CashViewSet(viewsets.ModelViewSet):
 class CardViewSet(viewsets.ModelViewSet):
     queryset = Card.objects.all()
     serializer_class = CardSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess]
+    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess, HasValidLicense]
 
     def get_queryset(self):
         return Card.objects.filter(user=self.request.user)
@@ -67,10 +68,18 @@ class CardViewSet(viewsets.ModelViewSet):
 class ContactViewSet(viewsets.ModelViewSet):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess]
+    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess, HasValidLicense]
 
     def get_queryset(self):
         return Contact.objects.filter(user=self.request.user)
+
+class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = License.objects.all()
+    serializer_class = LicenseSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess]
+
+    def get_queryset(self):
+        return License.objects.filter(user=self.request.user)
 
 def api_welcome(request):
     return render(request, 'welcome.html')
@@ -100,7 +109,13 @@ class RegisterView(APIView):
         logger.info(f"Received data: {request.data}")
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            user = serializer.save()
+            # Crear licencia para el nuevo usuario
+            License.objects.create(
+                user=user,
+                is_pro=False,
+                active=True
+            )
             return Response({"message": "Usuario creado exitosamente"}, status=status.HTTP_201_CREATED)
         logger.error(f"Serializer errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -37,6 +37,11 @@ class ContactSerializer(serializers.ModelSerializer):
         model = Contact
         fields = '__all__'  
 
+class LicenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = License
+        fields = '__all__'
+
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 

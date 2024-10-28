@@ -10,7 +10,7 @@ router.register(r'purchases', PurchaseViewSet)
 router.register(r'cash', CashViewSet)
 router.register(r'cards', CardViewSet)
 router.register(r'contacts', ContactViewSet)
-
+router.register(r'licenses', LicenseViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('register/', RegisterView.as_view(), name='register'),
