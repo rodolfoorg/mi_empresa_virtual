@@ -1,20 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import (
-    BusinessViewSet,
-    ProductViewSet,
-    SaleViewSet,
-    PurchaseViewSet,
-    CashViewSet,
-    CardViewSet,
-    ContactViewSet,
-    LicenseViewSet,
-    CustomAuthToken,
-    LogoutView,
-    RegisterView,
-    PublicProductViewSet,
-    PublicBusinessViewSet,
-)
+from .views import *
 
 # Crear el router
 router = DefaultRouter()
