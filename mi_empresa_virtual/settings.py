@@ -141,7 +141,7 @@ else:
     CORS_ALLOWED_ORIGINS = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "https://mi-empresa-virtual-1.onrender.com/",
+        "https://mi-empresa-virtual-4h1s.onrender.com",
         # Añade aquí los dominios de producción cuando estés listo
     ]
 
