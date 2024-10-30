@@ -96,8 +96,8 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'mi_empresa_virual_pgsql',
-            'USER': 'mi_empresa_virual_pgsql_user',
+            'NAME': 'mi_empresa_virual_pgsql_b50v',
+            'USER': 'mi_empresa_virual_pgsql_b50v_user',
             'PASSWORD': 'r4XQT6RslJFpl2fgjTi4EzRgYmCSlj7p',
             'HOST': 'dpg-cshah1rtq21c73fn6uu0-a.ohio-postgres.render.com',
             'PORT': '5432',
