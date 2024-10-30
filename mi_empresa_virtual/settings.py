@@ -89,9 +89,9 @@ if DEBUG:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'mi_empresa_virtual_dev',
+            'NAME': 'mi_empresa_virtual_pgsql',
             'USER': 'postgres',
-            'PASSWORD': 'postgres',
+            'PASSWORD': '010103',
             'HOST': 'localhost',
             'PORT': '5432',
         }
