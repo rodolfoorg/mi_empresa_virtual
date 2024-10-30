@@ -68,7 +68,7 @@ Las contribuciones son bienvenidas. Por favor, abre un issue para discutir los c
 ## Comandos útiles
 
 ### Activar el venv
-source venv/Scripts/activate
+source venv_mi_empresa_virtual/Scripts/activate
 
 ### Guardar dependencias en requirements.txt
 pip freeze > requirements.txt
