@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AbstractUser
 from django.utils import timezone
 from PIL import Image
 from io import BytesIO
@@ -101,3 +101,9 @@ def redimensionar_imagen(imagen, ancho=800, alto=600):
     nuevo_nombre = f"{nombre_base}_optimized.jpg"
     
     return File(output, name=nuevo_nombre)
+
+class User(AbstractUser):
+    email = models.EmailField(unique=True)
+    
+    class Meta:
+        swappable = 'AUTH_USER_MODEL'
