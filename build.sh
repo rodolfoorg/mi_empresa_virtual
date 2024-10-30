@@ -3,13 +3,7 @@
 set -o errexit
 
 pip install -r requirements.txt
-
 python manage.py collectstatic --no-input
-
-# Eliminar base de datos existente y migraciones
-rm -f db.sqlite3
-find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
-
 # Crear nuevas migraciones y aplicarlas
 python manage.py makemigrations
 python manage.py migrate
