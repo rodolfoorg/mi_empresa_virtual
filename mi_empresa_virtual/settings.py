@@ -87,15 +87,11 @@ WSGI_APPLICATION = 'mi_empresa_virtual.wsgi.application'
 
 if DEBUG:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'mi_empresa_virtual_pgsql',
-            'USER': 'postgres',
-            'PASSWORD': '010103',
-            'HOST': 'localhost',
-            'PORT': '5432',
-        }
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
+}
 else:
     DATABASES = {
         'default': {
