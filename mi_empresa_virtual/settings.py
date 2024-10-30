@@ -98,8 +98,8 @@ else:
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': 'mi_empresa_virual_pgsql',
             'USER': 'mi_empresa_virual_pgsql_user',
-            'PASSWORD': 'VvzZ01onJETMZTZQtUU7gtsihusF2H6D',
-            'HOST': 'dpg-csh7cotumphs73c1sc1g-a.ohio-postgres.render.com',
+            'PASSWORD': 'r4XQT6RslJFpl2fgjTi4EzRgYmCSlj7p',
+            'HOST': 'dpg-cshah1rtq21c73fn6uu0-a.ohio-postgres.render.com',
             'PORT': '5432',
         }
     }
