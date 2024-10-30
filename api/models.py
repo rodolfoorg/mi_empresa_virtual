@@ -4,9 +4,10 @@ from django.utils import timezone
 from PIL import Image
 from io import BytesIO
 from django.core.files import File
+from django.conf import settings
 
 class Business(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     owner = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
     phone = models.CharField(max_length=15)
@@ -28,7 +29,7 @@ class Product(models.Model):
     image = models.ImageField(upload_to='product_images/', null=True, blank=True)
 
 class Contact(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     number = models.CharField(max_length=15)
     is_customer = models.BooleanField(default=True)
@@ -55,13 +56,13 @@ class Purchase(models.Model):
     is_credit = models.BooleanField(default=False)
 
 class Expense(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now, blank=True)
 
 class Card(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     number = models.CharField(max_length=16)
     balance = models.DecimalField(max_digits=10, decimal_places=2)
@@ -71,7 +72,7 @@ def get_expiration_date():
     return timezone.now() + timezone.timedelta(minutes=40320)
 
 class License(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     is_pro = models.BooleanField(default=False)
     start_date = models.DateTimeField(default=timezone.now)
     expiration_date = models.DateTimeField(default=get_expiration_date)
