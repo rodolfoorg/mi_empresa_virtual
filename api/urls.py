@@ -26,5 +26,4 @@ urlpatterns = [
 
     # Ruta de bienvenida (si la necesitas)
     path('', api_welcome, name='api-welcome'),
-    path('get-username/', GetUsernameByEmail.as_view(), name='get-username'),
 ]

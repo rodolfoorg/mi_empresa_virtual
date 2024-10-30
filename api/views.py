@@ -11,7 +11,6 @@ from rest_framework.views import APIView
 from rest_framework import status
 from .licencePersmission import HasValidLicense
 import logging
-from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -138,23 +137,3 @@ class PublicBusinessViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         # Solo retorna negocios públicos
         return Business.objects.filter(is_public=True)
-
-class GetUsernameByEmail(APIView):
-    permission_classes = []  # Permitir acceso público
-    
-    def post(self, request):
-        email = request.data.get('email')
-        if not email:
-            return Response({
-                'error': 'El email es requerido'
-            }, status=status.HTTP_400_BAD_REQUEST)
-            
-        try:
-            user = User.objects.get(email=email)
-            return Response({
-                'username': user.username
-            })
-        except User.DoesNotExist:
-            return Response({
-                'error': 'No existe usuario con este email'
-            }, status=status.HTTP_404_NOT_FOUND)
