@@ -22,9 +22,9 @@ class PurchaseSerializer(serializers.ModelSerializer):
         model = Purchase
         fields = '__all__'  
 
-class CashSerializer(serializers.ModelSerializer):
+class ExpenseSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Cash
+        model = Expense
         fields = '__all__'  
 
 class CardSerializer(serializers.ModelSerializer):

@@ -49,13 +49,13 @@ class PurchaseViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Purchase.objects.filter(product__business__user=self.request.user)
 
-class CashViewSet(viewsets.ModelViewSet):
-    queryset = Cash.objects.all()
-    serializer_class = CashSerializer
+class ExpenseViewSet(viewsets.ModelViewSet):
+    queryset = Expense.objects.all()
+    serializer_class = ExpenseSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrNoAccess, HasValidLicense]
 
     def get_queryset(self):
-        return Cash.objects.filter(user=self.request.user)
+        return Expense.objects.filter(user=self.request.user)
 
 class CardViewSet(viewsets.ModelViewSet):
     queryset = Card.objects.all()

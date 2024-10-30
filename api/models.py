@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from PIL import Image
+from io import BytesIO
+from django.core.files import File
 
 class Business(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -51,9 +54,10 @@ class Purchase(models.Model):
     created_at = models.DateTimeField(default=timezone.now, blank=True)
     is_credit = models.BooleanField(default=False)
 
-class Cash(models.Model):
+class Expense(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now, blank=True)
 
 class Card(models.Model):
@@ -73,3 +77,27 @@ class License(models.Model):
     expiration_date = models.DateTimeField(default=get_expiration_date)
     active = models.BooleanField(default=True)
     notes = models.TextField(blank=True, null=True)
+
+def redimensionar_imagen(imagen, ancho=800, alto=600):
+    if not imagen:
+        return None
+        
+    img = Image.open(imagen)
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
+    
+    # Redimensionar manteniendo la proporción
+    img.thumbnail((ancho, alto))
+    
+    # Optimizar y comprimir
+    output = BytesIO()
+    # Reducimos la calidad a 60% para menor peso
+    img.save(output, format='JPEG', quality=60, optimize=True)
+    output.seek(0)
+    
+    # Generar nuevo nombre para la imagen optimizada
+    nombre_original = imagen.name
+    nombre_base = nombre_original.split('.')[0]
+    nuevo_nombre = f"{nombre_base}_optimized.jpg"
+    
+    return File(output, name=nuevo_nombre)
