@@ -88,8 +88,12 @@ WSGI_APPLICATION = 'mi_empresa_virtual.wsgi.application'
 if DEBUG:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'mi_empresa_virtual_dev',
+            'USER': 'postgres',
+            'PASSWORD': 'postgres',
+            'HOST': 'localhost',
+            'PORT': '5432',
         }
     }
 else:
@@ -99,11 +103,12 @@ else:
             'NAME': 'mi_empresa_virual_pgsql',
             'USER': 'mi_empresa_virual_pgsql_user',
             'PASSWORD': 'VvzZ01onJETMZTZQtUU7gtsihusF2H6D',
-            'HOST': 'dpg-cnvvvhf109ks73f2aqe0-a',  # Reemplaza con tu host de Render
+            'HOST': 'dpg-csh7cotumphs73c1sc1g-a.ohio-postgres.render.com',  # Hostname completo
             'PORT': '5432',
         }
     }
 
+# Configuración SQLite (comentada)
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.sqlite3',
