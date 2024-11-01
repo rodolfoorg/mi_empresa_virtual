@@ -9,7 +9,7 @@ class Business(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     owner = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
-    phone = models.CharField(max_length=15)
+    phone = models.CharField(max_length=15, null=True, blank=True, default="No especificado")
     province = models.CharField(max_length=100)
     municipality = models.CharField(max_length=100)
     street = models.CharField(max_length=200, blank=True, null=True)
