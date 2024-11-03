@@ -80,8 +80,14 @@ def get_expiration_date():
     return timezone.now() + timezone.timedelta(minutes=40320)
 
 class License(models.Model):
+    PLAN_CHOICES = [
+        ('gratis', 'Gratis'),
+        ('basico', 'Básico'),
+        ('pro', 'Pro'),
+    ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     is_pro = models.BooleanField(default=False)
+    plan = models.CharField(max_length=10, choices=PLAN_CHOICES, default='gratis')
     start_date = models.DateTimeField(default=timezone.now)
     expiration_date = models.DateTimeField(default=get_expiration_date)
     active = models.BooleanField(default=True)
