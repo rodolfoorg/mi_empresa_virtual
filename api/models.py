@@ -15,7 +15,6 @@ class Business(models.Model):
     street = models.CharField(max_length=200, blank=True, null=True)
     house_number = models.CharField(max_length=10, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    is_public = models.BooleanField(default=True)
     created_at = models.DateTimeField(default=timezone.now, blank=True)
     image = models.ImageField(upload_to='business_images/', null=True, blank=True)
 
@@ -26,12 +25,13 @@ class Product(models.Model):
     category = models.CharField(max_length=100, default='Otros', blank=True, null=True)
     purchase_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     sale_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    is_public = models.BooleanField(default=True)
     stock = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now, blank=True)
     image = models.ImageField(upload_to='product_images/', null=True, blank=True)
 
 class Contact(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    business = models.ForeignKey(Business, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     number = models.CharField(max_length=15)
     is_customer = models.BooleanField(default=True)
@@ -39,9 +39,18 @@ class Contact(models.Model):
     created_at = models.DateTimeField(default=timezone.now, blank=True)
     image = models.ImageField(upload_to='contact_images/', null=True, blank=True)
 
+class Card(models.Model):
+    business = models.ForeignKey(Business, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    number = models.CharField(max_length=16)
+    balance = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(default=timezone.now, blank=True)
+
 class Sale(models.Model):
+    business = models.ForeignKey(Business, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     contact = models.ForeignKey(Contact, on_delete=models.SET_NULL, null=True, blank=True)
+    card = models.ForeignKey(Card, on_delete=models.SET_NULL, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
     quantity = models.PositiveIntegerField()
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -49,8 +58,10 @@ class Sale(models.Model):
     is_credit = models.BooleanField(default=False)
 
 class Purchase(models.Model):
+    business = models.ForeignKey(Business, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     contact = models.ForeignKey(Contact, on_delete=models.SET_NULL, null=True, blank=True)
+    card = models.ForeignKey(Card, on_delete=models.SET_NULL, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
     quantity = models.PositiveIntegerField()
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -58,17 +69,11 @@ class Purchase(models.Model):
     is_credit = models.BooleanField(default=False)
 
 class Expense(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    business = models.ForeignKey(Business, on_delete=models.CASCADE)
+    card = models.ForeignKey(Card, on_delete=models.SET_NULL, null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField(blank=True, null=True)
     category = models.CharField(max_length=100, default='Otros', blank=True, null=True)
-    created_at = models.DateTimeField(default=timezone.now, blank=True)
-
-class Card(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-    number = models.CharField(max_length=16)
-    balance = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(default=timezone.now, blank=True)
 
 def get_expiration_date():

@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from .licencePersmission import HasValidLicense
 import logging
+from .mixins import BusinessFilterMixin
 
 logger = logging.getLogger(__name__)
 
@@ -25,53 +26,35 @@ class BusinessViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Business.objects.filter(user=self.request.user)
 
-class ProductViewSet(viewsets.ModelViewSet):
+class ProductViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [ IsOwnerOrNoAccess, HasValidLicense]
+    permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return Product.objects.filter(business__user=self.request.user)
-
-class SaleViewSet(viewsets.ModelViewSet):
+class SaleViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
     queryset = Sale.objects.all()
     serializer_class = SaleSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess, HasValidLicense]
+    permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return Sale.objects.filter(product__business__user=self.request.user)
-
-class PurchaseViewSet(viewsets.ModelViewSet):
+class PurchaseViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
     queryset = Purchase.objects.all()
     serializer_class = PurchaseSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess, HasValidLicense]
+    permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return Purchase.objects.filter(product__business__user=self.request.user)
-
-class ExpenseViewSet(viewsets.ModelViewSet):
+class ExpenseViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
     queryset = Expense.objects.all()
     serializer_class = ExpenseSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess, HasValidLicense]
+    permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return Expense.objects.filter(user=self.request.user)
-
-class CardViewSet(viewsets.ModelViewSet):
+class CardViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
     queryset = Card.objects.all()
     serializer_class = CardSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess, HasValidLicense]
+    permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return Card.objects.filter(user=self.request.user)
-
-class ContactViewSet(viewsets.ModelViewSet):
+class ContactViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess, HasValidLicense]
-
-    def get_queryset(self):
-        return Contact.objects.filter(user=self.request.user)
+    permission_classes = [IsAuthenticated]
 
 class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = License.objects.all()
@@ -126,8 +109,8 @@ class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        # Solo retorna productos de negocios públicos
-        return Product.objects.filter(business__is_public=True)
+        # Solo retorna productos públicos
+        return Product.objects.filter(is_public=True)
 
 class PublicBusinessViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Business.objects.all()
@@ -135,5 +118,5 @@ class PublicBusinessViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        # Solo retorna negocios públicos
-        return Business.objects.filter(is_public=True)
+        # Retorna todos los negocios sin restricciones
+        return Business.objects.all()
