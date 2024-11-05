@@ -24,6 +24,14 @@ urlpatterns = [
     path('auth/login/', CustomAuthToken.as_view(), name='login'),
     path('auth/logout/', LogoutView.as_view(), name='logout'),
 
-    # Ruta de bienvenida (si la necesitas)
+    # Rutas para operaciones financieras
+    path('sales/register_sale/', SaleViewSet.as_view({'post': 'register_sale'}), name='register-sale'),
+    path('sales/<int:pk>/undo_sale/', SaleViewSet.as_view({'post': 'undo_sale'}), name='undo-sale'),
+    path('purchases/register_purchase/', PurchaseViewSet.as_view({'post': 'register_purchase'}), name='register-purchase'),
+    path('purchases/<int:pk>/undo_purchase/', PurchaseViewSet.as_view({'post': 'undo_purchase'}), name='undo-purchase'),
+    path('expenses/register_expense/', ExpenseViewSet.as_view({'post': 'register_expense'}), name='register-expense'),
+    path('expenses/<int:pk>/undo_expense/', ExpenseViewSet.as_view({'post': 'undo_expense'}), name='undo-expense'),
+
+    # Ruta de bienvenida
     path('', api_welcome, name='api-welcome'),
 ]
