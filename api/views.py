@@ -15,6 +15,7 @@ from .mixins import BusinessFilterMixin
 from rest_framework.decorators import action
 from django.db import transaction
 from decimal import Decimal
+from django.contrib.auth import authenticate
 
 logger = logging.getLogger(__name__)
 
@@ -353,16 +354,35 @@ def api_welcome(request):
 
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data,
-                                           context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({
-            'token': token.key,
-            'user_id': user.pk,
-            'username': user.username # Cambiado de email a username
-        })
+        username = request.data.get('username')
+        password = request.data.get('password')
+        
+        logger.info(f"Intento de login - Username: {username}")
+
+        try:
+            # Primero obtener el usuario
+            user = User.objects.get(username=username)
+            
+            # Verificar la contraseña directamente
+            if user.check_password(password):
+                # Si la contraseña es correcta, generar token
+                token, _ = Token.objects.get_or_create(user=user)
+                return Response({
+                    'token': token.key,
+                    'user_id': user.pk,
+                    'username': user.username
+                })
+            else:
+                return Response(
+                    {'error': 'Contraseña incorrecta'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'Usuario no encontrado'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 class LogoutView(APIView):
     permission_classes = (IsAuthenticated,)

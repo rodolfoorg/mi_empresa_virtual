@@ -22,7 +22,7 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     
     # Rutas de autenticación
-    path('auth/login/', CustomAuthToken.as_view(), name='login'),
+    path('login/', CustomAuthToken.as_view(), name='login'),
     path('auth/logout/', LogoutView.as_view(), name='logout'),
 
     # Rutas para operaciones financieras
