@@ -26,3 +26,23 @@ class IsOwnerOrNoAccess(permissions.BasePermission):
         if request.method == 'GET':
             return True
         return request.user and request.user.is_authenticated
+
+class OnlyOwnerAccess(permissions.BasePermission):
+    """
+    Permiso personalizado que solo permite al propietario ver, editar, eliminar o crear objetos
+    """
+    
+    def has_object_permission(self, request, view, obj):
+        # Verificar si es propietario para todos los métodos
+        if hasattr(obj, 'user'):
+            return obj.user == request.user
+        elif hasattr(obj, 'business'):
+            return obj.business.user == request.user
+        elif hasattr(obj, 'product'):
+            return obj.product.business.user == request.user
+        else:
+            return False
+
+    def has_permission(self, request, view):
+        # Solo permitir acceso a usuarios autenticados
+        return request.user and request.user.is_authenticated

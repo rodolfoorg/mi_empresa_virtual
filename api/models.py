@@ -15,6 +15,7 @@ class Business(models.Model):
     street = models.CharField(max_length=200, blank=True, null=True)
     house_number = models.CharField(max_length=10, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
+    is_public = models.BooleanField(default=True)
     created_at = models.DateTimeField(default=timezone.now, blank=True)
     image = models.ImageField(upload_to='business_images/', null=True, blank=True)
 

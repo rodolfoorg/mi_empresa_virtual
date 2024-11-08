@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import *
 from .serializers import *
-from .permissions import IsOwnerOrNoAccess
+from .permissions import IsOwnerOrNoAccess,OnlyOwnerAccess
 from django.shortcuts import render
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class BusinessViewSet(viewsets.ModelViewSet):
     queryset = Business.objects.all()
     serializer_class = BusinessSerializer
-    permission_classes = [ IsOwnerOrNoAccess, HasValidLicense]
+    permission_classes = [ IsOwnerOrNoAccess, HasValidLicense,OnlyOwnerAccess]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -402,8 +402,8 @@ class PublicBusinessViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        # Retorna todos los negocios sin restricciones
-        return Business.objects.all()
+        # Solo retorna negocios públicos
+        return Business.objects.filter(is_public=True)
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
