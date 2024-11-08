@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class BusinessViewSet(viewsets.ModelViewSet):
     queryset = Business.objects.all()
     serializer_class = BusinessSerializer
-    permission_classes = [ IsOwnerOrNoAccess, HasValidLicense,OnlyOwnerAccess]
+    permission_classes = [  HasValidLicense,OnlyOwnerAccess]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -361,7 +361,7 @@ class CustomAuthToken(ObtainAuthToken):
         return Response({
             'token': token.key,
             'user_id': user.pk,
-            'email': user.email
+            'username': user.username # Cambiado de email a username
         })
 
 class LogoutView(APIView):
