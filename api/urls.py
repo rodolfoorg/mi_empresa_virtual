@@ -5,6 +5,7 @@ from .views import *
 # Crear el router
 router = DefaultRouter()
 router.register(r'products', ProductViewSet)
+router.register(r'user', UserViewSet)
 router.register(r'sales', SaleViewSet)
 router.register(r'businesses', BusinessViewSet)
 router.register(r'purchases', PurchaseViewSet)
