@@ -45,6 +45,13 @@ class LicenseSerializer(serializers.ModelSerializer):
         model = License
         fields = '__all__'
 
+class LicenseRenewalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LicenseRenewal
+        fields = ['id', 'user', 'transaction_code', 'requested_at', 'status', 
+                 'processed_at', 'notes', 'days_requested']
+        read_only_fields = ['user', 'status', 'processed_at']
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

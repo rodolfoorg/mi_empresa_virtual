@@ -18,6 +18,7 @@ router.register(r'licenses', LicenseViewSet)
 router.register(r'public-products', PublicProductViewSet, basename='public-products')
 router.register(r'public-businesses', PublicBusinessViewSet, basename='public-businesses')
 router.register(r'auth', AuthViewSet, basename='auth')  # Nueva vista para autenticación
+router.register(r'license-renewals', LicenseRenewalViewSet)
 
 # Definir las rutas
 urlpatterns = [

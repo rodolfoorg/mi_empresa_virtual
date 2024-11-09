@@ -155,3 +155,24 @@ class EmailVerificationToken(models.Model):
 
     def __str__(self):
         return f"Token de verificación para {self.user.email}"
+
+class LicenseRenewal(models.Model):
+    STATUS_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('aprobada', 'Aprobada'),
+        ('rechazada', 'Rechazada')
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    transaction_code = models.CharField(max_length=100)
+    requested_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pendiente')
+    processed_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True, null=True)
+    days_requested = models.IntegerField(default=30)  # Por defecto 30 días
+
+    def __str__(self):
+        return f"Renovación de {self.user.username} - {self.status}"
+
+    class Meta:
+        ordering = ['-requested_at']

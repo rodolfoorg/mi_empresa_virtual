@@ -20,6 +20,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -575,3 +577,189 @@ class AuthViewSet(viewsets.ViewSet):
     def verify_email(self, request):
         token = request.query_params.get('token')
         return VerifyEmailView().get(request, token)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def request_license_renewal(request):
+    try:
+        # Verificar si el usuario tiene una licencia
+        license = License.objects.get(user=request.user)
+        
+        # Calcular días restantes
+        days_remaining = (license.expiration_date - timezone.now()).days
+        
+        # Solo permitir renovación si quedan 7 días o menos
+        if days_remaining > 7:
+            return Response({
+                'error': f'Solo puedes renovar cuando te queden 7 días o menos. Te quedan {days_remaining} días.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Verificar si ya tiene una solicitud pendiente
+        pending_renewal = LicenseRenewal.objects.filter(
+            user=request.user, 
+            status='pendiente'
+        ).exists()
+        
+        if pending_renewal:
+            return Response({
+                'error': 'Ya tienes una solicitud de renovación pendiente'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Crear nueva solicitud de renovación
+        renewal = LicenseRenewal.objects.create(
+            user=request.user,
+            transaction_code=request.data.get('transaction_code'),
+            days_requested=request.data.get('days', 30),
+            notes=request.data.get('notes', '')
+        )
+
+        return Response({
+            'message': 'Solicitud de renovación enviada correctamente',
+            'renewal_id': renewal.id
+        }, status=status.HTTP_201_CREATED)
+
+    except License.DoesNotExist:
+        return Response({
+            'error': 'No tienes una licencia activa'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def check_renewal_status(request):
+    renewals = LicenseRenewal.objects.filter(user=request.user).order_by('-requested_at')[:5]
+    
+    return Response({
+        'renewals': [{
+            'id': r.id,
+            'status': r.status,
+            'requested_at': r.requested_at,
+            'processed_at': r.processed_at,
+            'transaction_code': r.transaction_code,
+            'days_requested': r.days_requested
+        } for r in renewals]
+    })
+
+# Vista para administradores
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def process_renewal(request, renewal_id):
+    if not request.user.is_staff:
+        return Response({
+            'error': 'No tienes permisos para realizar esta acción'
+        }, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        renewal = LicenseRenewal.objects.get(id=renewal_id)
+        action = request.data.get('action')
+
+        if action == 'approve':
+            # Actualizar la licencia
+            license = License.objects.get(user=renewal.user)
+            
+            # Si la licencia ya expiró, comenzar desde ahora
+            if license.expiration_date < timezone.now():
+                license.expiration_date = timezone.now()
+            
+            # Agregar los días solicitados
+            license.expiration_date += timezone.timedelta(days=renewal.days_requested)
+            license.active = True
+            license.save()
+
+            renewal.status = 'aprobada'
+            renewal.processed_at = timezone.now()
+            renewal.save()
+
+            return Response({'message': 'Renovación aprobada correctamente'})
+
+        elif action == 'reject':
+            renewal.status = 'rechazada'
+            renewal.processed_at = timezone.now()
+            renewal.notes = request.data.get('rejection_reason', '')
+            renewal.save()
+
+            return Response({'message': 'Renovación rechazada'})
+
+    except LicenseRenewal.DoesNotExist:
+        return Response({
+            'error': 'Solicitud de renovación no encontrada'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+class LicenseRenewalViewSet(viewsets.ModelViewSet):
+    queryset = LicenseRenewal.objects.all()
+    serializer_class = LicenseRenewalSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return LicenseRenewal.objects.all()
+        return LicenseRenewal.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        # Verificar si el usuario tiene una licencia
+        try:
+            license = License.objects.get(user=self.request.user)
+            days_remaining = (license.expiration_date - timezone.now()).days
+
+            if days_remaining > 7:
+                raise ValidationError(
+                    f'Solo puedes renovar cuando te queden 7 días o menos. Te quedan {days_remaining} días.'
+                )
+
+            # Verificar si ya tiene una solicitud pendiente
+            if LicenseRenewal.objects.filter(user=self.request.user, status='pendiente').exists():
+                raise ValidationError('Ya tienes una solicitud de renovación pendiente')
+
+            serializer.save(user=self.request.user)
+
+        except License.DoesNotExist:
+            raise ValidationError('No tienes una licencia activa')
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsSuperUser])
+    def process(self, request, pk=None):
+        renewal = self.get_object()
+        action = request.data.get('action')
+
+        if action == 'approve':
+            try:
+                with transaction.atomic():
+                    license = License.objects.get(user=renewal.user)
+                    
+                    if license.expiration_date < timezone.now():
+                        license.expiration_date = timezone.now()
+                    
+                    license.expiration_date += timezone.timedelta(days=renewal.days_requested)
+                    license.active = True
+                    license.save()
+
+                    renewal.status = 'aprobada'
+                    renewal.processed_at = timezone.now()
+                    renewal.save()
+
+                return Response({'message': 'Renovación aprobada correctamente'})
+
+            except License.DoesNotExist:
+                return Response(
+                    {'error': 'No se encontró la licencia del usuario'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        elif action == 'reject':
+            renewal.status = 'rechazada'
+            renewal.processed_at = timezone.now()
+            renewal.notes = request.data.get('rejection_reason', '')
+            renewal.save()
+
+            return Response({'message': 'Renovación rechazada'})
+
+        return Response(
+            {'error': 'Acción no válida'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
