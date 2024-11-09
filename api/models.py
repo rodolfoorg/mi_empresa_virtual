@@ -5,6 +5,16 @@ from PIL import Image
 from io import BytesIO
 from django.core.files import File
 import uuid
+from django.core.exceptions import ValidationError
+
+def validate_business_limit(user_id):
+    if Business.objects.filter(user_id=user_id).count() >= 2:
+        raise ValidationError('No puedes crear más de 2 negocios.')
+
+def validate_product_limit(business_id):
+    if Product.objects.filter(business_id=business_id).count() >= 100:
+        raise ValidationError('No puedes crear más de 100 productos por negocio.')
+
 class Business(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     owner = models.CharField(max_length=100)
@@ -19,6 +29,18 @@ class Business(models.Model):
     created_at = models.DateTimeField(default=timezone.now, blank=True)
     image = models.ImageField(upload_to='business_images/', null=True, blank=True)
 
+    class Meta:
+        unique_together = ['user', 'name']
+
+    def clean(self):
+        if not self.pk:  # Solo validar al crear nuevo negocio
+            validate_business_limit(self.user_id)
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
 class Product(models.Model):
     business = models.ForeignKey(Business, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
@@ -30,6 +52,18 @@ class Product(models.Model):
     stock = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now, blank=True)
     image = models.ImageField(upload_to='product_images/', null=True, blank=True)
+
+    class Meta:
+        unique_together = ['business', 'name']
+
+    def clean(self):
+        if not self.pk:  # Solo validar al crear nuevo producto
+            validate_product_limit(self.business_id)
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
 class Contact(models.Model):
     business = models.ForeignKey(Business, on_delete=models.CASCADE)
@@ -46,6 +80,9 @@ class Card(models.Model):
     number = models.CharField(max_length=16)
     balance = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(default=timezone.now, blank=True)
+
+    class Meta:
+        unique_together = ['business', 'name']
 
 class Sale(models.Model):
     business = models.ForeignKey(Business, on_delete=models.CASCADE)
@@ -78,17 +115,10 @@ class Expense(models.Model):
     created_at = models.DateTimeField(default=timezone.now, blank=True)
 
 def get_expiration_date():
-    return timezone.now() + timezone.timedelta(minutes=40320)
+    return timezone.now() + timezone.timedelta(days=7)
 
 class License(models.Model):
-    PLAN_CHOICES = [
-        ('gratis', 'Gratis'),
-        ('basico', 'Básico'),
-        ('pro', 'Pro'),
-    ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    is_pro = models.BooleanField(default=False)
-    plan = models.CharField(max_length=10, choices=PLAN_CHOICES, default='gratis')
     start_date = models.DateTimeField(default=timezone.now)
     expiration_date = models.DateTimeField(default=get_expiration_date)
     active = models.BooleanField(default=True)
