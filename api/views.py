@@ -455,8 +455,8 @@ class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        # Solo retorna productos públicos
-        return Product.objects.filter(is_public=True)
+        # Solo retorna productos públicos de negocios públicos
+        return Product.objects.filter(is_public=True, business__is_public=True)
 
 class PublicBusinessViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Business.objects.all()
