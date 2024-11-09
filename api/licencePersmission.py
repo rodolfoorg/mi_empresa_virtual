@@ -26,3 +26,16 @@ class HasValidLicense(permissions.BasePermission):
                    
         except License.DoesNotExist:
             return False
+            
+class IsSuperUser(permissions.BasePermission):
+    """
+    Permiso que solo permite acceso a superusuarios para operaciones de escritura
+    """
+    
+    def has_permission(self, request, view):
+        # Permitir lectura a cualquier usuario autenticado
+        if request.method in permissions.SAFE_METHODS:
+            return bool(request.user and request.user.is_authenticated)
+            
+        # Para operaciones de escritura, verificar si es superusuario
+        return bool(request.user and request.user.is_superuser)

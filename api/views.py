@@ -9,7 +9,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from .licencePersmission import HasValidLicense
+from .licencePersmission import HasValidLicense,IsSuperUser
 import logging
 from .mixins import BusinessFilterMixin
 from rest_framework.decorators import action
@@ -345,10 +345,10 @@ class ContactViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
     serializer_class = ContactSerializer
     permission_classes = [IsAuthenticated]
 
-class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
+class LicenseViewSet(viewsets.ModelViewSet):
     queryset = License.objects.all()
     serializer_class = LicenseSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrNoAccess]
+    permission_classes = [IsAuthenticated,IsSuperUser]
 
     def get_queryset(self):
         return License.objects.filter(user=self.request.user)
@@ -541,3 +541,37 @@ class VerifyEmailView(APIView):
             return Response({
                 'error': 'Error al verificar el email. Por favor, intenta nuevamente'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class AuthViewSet(viewsets.ViewSet):
+    permission_classes = []
+
+    def get_queryset(self):
+        return []  # Retorna una lista vacía ya que no usa modelo
+
+    def list(self, request):
+        return Response({
+            "endpoints": {
+                "login": "auth/login/",
+                "logout": "auth/logout/",
+                "register": "auth/register/",
+                "verify_email": "auth/verify-email/"
+            }
+        })
+
+    @action(detail=False, methods=['post'])
+    def login(self, request):
+        return CustomAuthToken().post(request)
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def logout(self, request):
+        request.user.auth_token.delete()
+        return Response(status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def register(self, request):
+        return RegisterView().post(request)
+
+    @action(detail=False, methods=['get'])
+    def verify_email(self, request):
+        token = request.query_params.get('token')
+        return VerifyEmailView().get(request, token)
