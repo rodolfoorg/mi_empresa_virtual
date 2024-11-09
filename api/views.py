@@ -408,7 +408,7 @@ class RegisterView(APIView):
                 verification_token = EmailVerificationToken.objects.create(user=user)
                 
                 # URL del frontend
-                frontend_url = "http://localhost:5173"
+                frontend_url = "http://ecomcuba.com"
                 verification_url = f"{frontend_url}/verify-email/{verification_token.token}"
                 
                 # Enviar email
