@@ -22,6 +22,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
+from dateutil.relativedelta import relativedelta
 
 logger = logging.getLogger(__name__)
 
@@ -664,8 +665,8 @@ def process_renewal(request, renewal_id):
             if license.expiration_date < timezone.now():
                 license.expiration_date = timezone.now()
             
-            # Agregar los días solicitados
-            license.expiration_date += timezone.timedelta(days=renewal.days_requested)
+            # Agregar un mes a la fecha de expiración
+            license.expiration_date = license.expiration_date + relativedelta(months=1)
             license.active = True
             license.save()
 
@@ -735,7 +736,7 @@ class LicenseRenewalViewSet(viewsets.ModelViewSet):
                     if license.expiration_date < timezone.now():
                         license.expiration_date = timezone.now()
                     
-                    license.expiration_date += timezone.timedelta(days=renewal.days_requested)
+                    license.expiration_date = license.expiration_date + relativedelta(months=1)
                     license.active = True
                     license.save()
 
