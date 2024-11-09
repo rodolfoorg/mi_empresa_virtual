@@ -136,7 +136,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
     "https://mis.finanzas.e-comcuba.com",
-    "https://timbiriche.e-comcuba.com"
+    "https://timbiriche.e-comcuba.com",
+    "https://e-comcuba.com",
 ]
 
 CORS_ALLOW_METHODS = [
@@ -166,7 +167,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:3000",
     "http://127.0.0.1:5173",
-    "http://127.0.0.1:3000"
+    "http://127.0.0.1:3000",
+    "https://e-comcuba.com",
 ]
 
 # Configuración adicional de seguridad
@@ -192,3 +194,16 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
 }
+
+# Configuración del Email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'mail.e-comcuba.com'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = '_mainaccount@e-comcuba.com'
+EMAIL_HOST_PASSWORD = 'hM1ZoaM493v6'
+DEFAULT_FROM_EMAIL = '_mainaccount@e-comcuba.com'
+
+# Configuraciones adicionales recomendadas
+EMAIL_TIMEOUT = 30  # timeout en segundos
+EMAIL_DEBUG = True  # para ver logs de emails durante desarrollo

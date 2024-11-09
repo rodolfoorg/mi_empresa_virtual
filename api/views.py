@@ -16,6 +16,10 @@ from rest_framework.decorators import action
 from django.db import transaction
 from decimal import Decimal
 from django.contrib.auth import authenticate
+from django.core.mail import send_mail
+from django.conf import settings
+from django.urls import reverse
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -393,19 +397,57 @@ class LogoutView(APIView):
 
 class RegisterView(APIView):
     def post(self, request):
-        logger.info(f"Received data: {request.data}")
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            # Crear licencia para el nuevo usuario
-            License.objects.create(
-                user=user,
-                is_pro=False,
-                active=True
+        try:
+            serializer = UserSerializer(data=request.data)
+            
+            if serializer.is_valid():
+                # Crear usuario inactivo
+                user = serializer.save()  # Ya está configurado para crear inactivo
+                
+                # Crear token de verificación
+                verification_token = EmailVerificationToken.objects.create(user=user)
+                
+                # URL del frontend
+                frontend_url = "http://localhost:5173"
+                verification_url = f"{frontend_url}/verify-email/{verification_token.token}"
+                
+                # Enviar email
+                send_mail(
+                    'Verifica tu cuenta en Mi Empresa Virtual',
+                    f'''
+                    Hola {user.username},
+
+                    Gracias por registrarte. Para activar tu cuenta, haz clic en el siguiente enlace:
+                    {verification_url}
+
+                    Este enlace expirará en 24 horas.
+
+                    Saludos,
+                    Mi Empresa Virtual
+                    ''',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+                
+                # Crear licencia
+                License.objects.create(
+                    user=user,
+                    is_pro=False,
+                    active=True
+                )
+                
+                return Response({
+                    "message": "Usuario creado. Por favor verifica tu correo electrónico"
+                }, status=status.HTTP_201_CREATED)
+            
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
             )
-            return Response({"message": "Usuario creado exitosamente"}, status=status.HTTP_201_CREATED)
-        logger.error(f"Serializer errors: {serializer.errors}")
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Product.objects.all()
@@ -440,3 +482,55 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class VerifyEmailView(APIView):
+    permission_classes = []  # Permitir acceso público
+
+    def get(self, request, token):
+        try:
+            # Verificar si el token existe
+            try:
+                verification_token = EmailVerificationToken.objects.get(token=token)
+            except EmailVerificationToken.DoesNotExist:
+                return Response({
+                    'error': 'Link de verificación inválido o ya utilizado'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Verificar si el usuario existe
+            if not verification_token.user:
+                verification_token.delete()
+                return Response({
+                    'error': 'Usuario no encontrado'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Verificar si el token no ha expirado (24 horas)
+            if (timezone.now() - verification_token.created_at).days >= 1:
+                verification_token.delete()
+                return Response({
+                    'error': 'El link de verificación ha expirado. Por favor, solicita uno nuevo'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Verificar si el usuario ya está activo
+            user = verification_token.user
+            if user.is_active:
+                verification_token.delete()
+                return Response({
+                    'error': 'Esta cuenta ya está verificada'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Activar usuario
+            user.is_active = True
+            user.save()
+            
+            # Eliminar token usado
+            verification_token.delete()
+            
+            return Response({
+                'message': '¡Email verificado exitosamente! Ya puedes iniciar sesión'
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error en verificación de email: {str(e)}")
+            return Response({
+                'error': 'Error al verificar el email. Por favor, intenta nuevamente'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

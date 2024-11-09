@@ -45,21 +45,18 @@ class LicenseSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'password', 'email', 'first_name', 'last_name']
+        fields = ['username', 'email', 'password']
         extra_kwargs = {
-            'password': {'write_only': True, 'required': True},
-            'username': {'required': True},
-            'email': {'required': False},
-            'first_name': {'required': False}, 
-            'last_name': {'required': False}
+            'password': {'write_only': True},
+            'email': {'required': True}  # Aseguramos que el email sea requerido
         }
 
     def create(self, validated_data):
+        # Crear usuario inactivo
         user = User.objects.create_user(
             username=validated_data['username'],
+            email=validated_data['email'],
             password=validated_data['password'],
-            email=validated_data.get('email', ''),
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', '')
+            is_active=False  # Usuario inactivo hasta verificar email
         )
         return user

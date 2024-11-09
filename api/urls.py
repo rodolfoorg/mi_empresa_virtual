@@ -24,6 +24,7 @@ urlpatterns = [
     # Rutas de autenticación
     path('login/', CustomAuthToken.as_view(), name='login'),
     path('auth/logout/', LogoutView.as_view(), name='logout'),
+    path('verify-email/<uuid:token>/', VerifyEmailView.as_view(), name='verify-email'),
 
     # Rutas para operaciones financieras
     path('sales/register_sale/', SaleViewSet.as_view({'post': 'register_sale'}), name='register-sale'),

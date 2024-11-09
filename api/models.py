@@ -4,7 +4,7 @@ from django.utils import timezone
 from PIL import Image
 from io import BytesIO
 from django.core.files import File
-
+import uuid
 class Business(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     owner = models.CharField(max_length=100)
@@ -117,3 +117,11 @@ def redimensionar_imagen(imagen, ancho=800, alto=600):
     nuevo_nombre = f"{nombre_base}_optimized.jpg"
     
     return File(output, name=nuevo_nombre)
+
+class EmailVerificationToken(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    token = models.UUIDField(default=uuid.uuid4, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Token de verificación para {self.user.email}"
