@@ -358,18 +358,25 @@ def api_welcome(request):
 
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
-        username = request.data.get('username')
+        identifier = request.data.get('username')  # Puede ser email o username
         password = request.data.get('password')
         
-        logger.info(f"Intento de login - Username: {username}")
-
         try:
-            # Primero obtener el usuario
-            user = User.objects.get(username=username)
+            # Si el identificador contiene @, buscar el usuario por email
+            if '@' in identifier:
+                try:
+                    user = User.objects.get(email__iexact=identifier)
+                    identifier = user.username  # Usar el username para autenticación
+                except User.DoesNotExist:
+                    return Response(
+                        {'error': f'No existe una cuenta con el email {identifier}'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
             
-            # Verificar la contraseña directamente
-            if user.check_password(password):
-                # Si la contraseña es correcta, generar token
+            # Intentar autenticar con el username (original o encontrado por email)
+            user = authenticate(username=identifier, password=password)
+            
+            if user:
                 token, _ = Token.objects.get_or_create(user=user)
                 return Response({
                     'token': token.key,
@@ -382,9 +389,9 @@ class CustomAuthToken(ObtainAuthToken):
                     status=status.HTTP_400_BAD_REQUEST
                 )
                 
-        except User.DoesNotExist:
+        except Exception as e:
             return Response(
-                {'error': 'Usuario no encontrado'},
+                {'error': 'Error en el proceso de login'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -408,7 +415,7 @@ class RegisterView(APIView):
                 verification_token = EmailVerificationToken.objects.create(user=user)
                 
                 # URL del frontend
-                frontend_url = "http://ecomcuba.com"
+                frontend_url = "https://e-comcuba.com"
                 verification_url = f"{frontend_url}/verify-email/{verification_token.token}"
                 
                 # Enviar email
