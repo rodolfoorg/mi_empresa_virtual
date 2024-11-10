@@ -82,22 +82,11 @@ class SaleViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         try:
-            with transaction.atomic():
-                # Añadir el business del usuario actual a los datos
-                data = request.data.copy()
-                data['business'] = request.user.business.id
-                
-                serializer = self.get_serializer(data=data)
-                if serializer.is_valid():
-                    sale = serializer.save()
-                    
-                    # Actualizar el stock del producto
-                    product = Product.objects.get(id=sale.product.id)
-                    product.stock -= sale.quantity
-                    product.save()
-                    
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                sale = serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(
                 {'detail': str(e)},
@@ -112,30 +101,15 @@ class PurchaseViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         return Purchase.objects.filter(business__user=self.request.user)
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        return context
-
-    @action(detail=False, methods=['post'])
-    def register_purchase(self, request):
+    def create(self, request, *args, **kwargs):
         try:
-            with transaction.atomic():
-                # Añadir el business del usuario actual a los datos
-                data = request.data.copy()
-                data['business'] = request.user.business.id
-                
-                serializer = self.get_serializer(data=data)
-                if serializer.is_valid():
-                    purchase = serializer.save()
-                    
-                    # Actualizar el stock del producto
-                    product = Product.objects.get(id=purchase.product.id)
-                    product.stock += purchase.quantity
-                    product.save()
-                    
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                purchase = serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
+            print(f"Error en create purchase: {str(e)}")
             return Response(
                 {'detail': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
@@ -198,26 +172,5 @@ class PurchaseViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
         except Exception as e:
             return Response(
                 {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-    def create(self, request, *args, **kwargs):
-        try:
-            with transaction.atomic():
-                serializer = self.get_serializer(data=request.data)
-                if serializer.is_valid():
-                    purchase = serializer.save()
-                    
-                    # Actualizar el stock del producto
-                    product = Product.objects.get(id=purchase.product.id)
-                    product.stock += purchase.quantity
-                    product.save()
-                    
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            print(f"Error en create purchase: {str(e)}")  # Para debugging
-            return Response(
-                {'detail': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )

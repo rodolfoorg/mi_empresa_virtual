@@ -28,14 +28,27 @@ class AuthViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
     def login(self, request):
-        username = request.data.get('username')
+        identifier = request.data.get('username')  # puede ser username o email
         password = request.data.get('password')
         
-        if not username or not password:
+        if not identifier or not password:
             return Response({
-                'error': 'Por favor proporcione usuario y contraseña'
+                'error': 'Por favor proporcione usuario/email y contraseña'
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        # Determinar si el identificador es un email
+        if '@' in identifier:
+            try:
+                user = User.objects.get(email=identifier)
+                username = user.username
+            except User.DoesNotExist:
+                return Response({
+                    'error': 'No existe una cuenta con este correo electrónico'
+                }, status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            username = identifier
+
+        # Intentar autenticar
         user = authenticate(username=username, password=password)
         
         if not user:

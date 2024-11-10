@@ -147,13 +147,23 @@ class License(models.Model):
         return timezone.timedelta(0)
 
 @receiver(post_save, sender=User)
-def crear_licencia_basica(sender, instance, created, **kwargs):
+def crear_licencia_y_negocio(sender, instance, created, **kwargs):
     if created:
+        # Crear licencia básica
         License.objects.create(
             user=instance,
             plan='basico',
             start_date=timezone.now(),
             expiration_date=timezone.now() + timezone.timedelta(days=7)
+        )
+        
+        # Crear negocio por defecto
+        Business.objects.create(
+            user=instance,
+            owner=instance.username,
+            name="Mi Negocio",
+            province="No especificada",
+            municipality="No especificado"
         )
 
 def redimensionar_imagen(imagen, ancho=800, alto=600):
