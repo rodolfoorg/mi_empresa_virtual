@@ -20,27 +20,48 @@ class ExpenseViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         return Expense.objects.filter(business__user=self.request.user)
 
+    def perform_create(self, serializer):
+        with transaction.atomic():
+            expense = serializer.save()
+            if hasattr(expense, 'card') and expense.card:
+                card = expense.card
+                card.balance -= expense.amount
+                card.save()
+
     @action(detail=True, methods=['post'])
     def undo_expense(self, request, pk=None):
         try:
             with transaction.atomic():
                 expense = self.get_object()
-                amount = expense.amount
-                card_id = expense.card_id if hasattr(expense, 'card') else None
+                card_id = request.data.get('card_id')
+                
+                if not card_id:
+                    raise ValueError("Debe seleccionar una tarjeta para la devolución")
+                
+                try:
+                    card = Card.objects.select_for_update().get(id=card_id)
+                    previous_balance = card.balance
+                    card.balance += expense.amount
+                    card.save()
+                    print(f"Card {card.id} balance updated: {previous_balance} -> {card.balance}")
+                except Card.DoesNotExist:
+                    raise ValueError("La tarjeta seleccionada no existe")
+                except Exception as e:
+                    raise ValueError(f"Error al actualizar el saldo de la tarjeta: {str(e)}")
 
-                if card_id:
-                    try:
-                        card = Card.objects.get(id=card_id)
-                        card.balance += amount
-                        card.save()
-                    except Card.DoesNotExist:
-                        pass
+                response_data = {
+                    'message': 'Gasto deshecho exitosamente',
+                    'amount': float(expense.amount),
+                    'card_id': card.id,
+                    'previous_balance': float(previous_balance),
+                    'new_balance': float(card.balance)
+                }
 
                 expense.delete()
-                return Response({'message': 'Gasto deshecho exitosamente'}, 
-                              status=status.HTTP_200_OK)
+                return Response(response_data, status=status.HTTP_200_OK)
 
         except Exception as e:
+            print(f"Error undoing expense: {str(e)}")
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST

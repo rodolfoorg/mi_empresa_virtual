@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 from rest_framework.validators import UniqueValidator
 import re
 from django.contrib.auth import authenticate
+from django.db import transaction
+from rest_framework.exceptions import ValidationError
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,7 +17,39 @@ class ProductSerializer(serializers.ModelSerializer):
 class SaleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sale
-        fields = '__all__'  
+        fields = '__all__'
+        read_only_fields = ['business']
+
+    def validate(self, data):
+        # Verificar stock disponible
+        product = Product.objects.get(id=data['product'].id)
+        if product.stock < data['quantity']:
+            raise serializers.ValidationError(
+                f"Stock insuficiente. Solo hay {product.stock} unidades disponibles."
+            )
+        return data
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        validated_data['business'] = request.user.business
+        
+        with transaction.atomic():
+            # Crear la venta
+            sale = super().create(validated_data)
+            
+            # Actualizar el stock del producto
+            product = Product.objects.get(id=sale.product.id)
+            product.stock -= sale.quantity
+            product.save()
+            
+            # Actualizar el saldo de la tarjeta si no es a crédito
+            if not sale.is_credit and sale.card:
+                card = Card.objects.get(id=sale.card.id)
+                total_amount = sale.quantity * sale.unit_price
+                card.balance += total_amount
+                card.save()
+            
+            return sale
 
 class BusinessSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,12 +59,56 @@ class BusinessSerializer(serializers.ModelSerializer):
 class PurchaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Purchase
-        fields = '__all__'  
+        fields = '__all__'
+        read_only_fields = ['business']
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        validated_data['business'] = request.user.business
+        
+        with transaction.atomic():
+            # Crear la compra
+            purchase = super().create(validated_data)
+            
+            # Actualizar el stock del producto
+            product = Product.objects.get(id=purchase.product.id)
+            product.stock += purchase.quantity
+            product.save()
+            
+            # Actualizar el saldo de la tarjeta si no es a crédito
+            if not purchase.is_credit and purchase.card:
+                card = Card.objects.get(id=purchase.card.id)
+                total_amount = purchase.quantity * purchase.unit_price
+                if card.balance < total_amount:
+                    raise ValidationError("La tarjeta no tiene saldo suficiente")
+                card.balance -= total_amount
+                card.save()
+            
+            return purchase
 
 class ExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
-        fields = '__all__'  
+        fields = '__all__'
+        read_only_fields = ['business']
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        validated_data['business'] = request.user.business
+        
+        with transaction.atomic():
+            # Crear el gasto
+            expense = super().create(validated_data)
+            
+            # Si hay una tarjeta asociada, actualizar su saldo
+            if expense.card:
+                card = Card.objects.get(id=expense.card.id)
+                if card.balance < expense.amount:
+                    raise ValidationError("La tarjeta no tiene saldo suficiente")
+                card.balance -= expense.amount
+                card.save()
+            
+            return expense
 
 class CardSerializer(serializers.ModelSerializer):
     class Meta:
@@ -40,7 +118,13 @@ class CardSerializer(serializers.ModelSerializer):
 class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
-        fields = '__all__'  
+        fields = '__all__'
+        read_only_fields = ['business']
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        validated_data['business'] = request.user.business
+        return super().create(validated_data)
 
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta:

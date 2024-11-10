@@ -8,6 +8,7 @@ import uuid
 from django.core.exceptions import ValidationError
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.core.validators import MinValueValidator
 
 def validate_product_limit(business_id, license_type):
     product_count = Product.objects.filter(business_id=business_id).count()
@@ -48,12 +49,18 @@ class Product(models.Model):
     purchase_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     sale_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     is_public = models.BooleanField(default=True)
-    stock = models.PositiveIntegerField(default=0)
+    stock = models.IntegerField(validators=[MinValueValidator(0)])
     created_at = models.DateTimeField(default=timezone.now, blank=True)
     image = models.ImageField(upload_to='product_images/', null=True, blank=True)
 
     class Meta:
         unique_together = ['business', 'name']
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(stock__gte=0),
+                name='stock_non_negative'
+            )
+        ]
 
     def clean(self):
         if not self.pk:  # Solo validar al crear nuevo producto
@@ -64,6 +71,9 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
 
 class Contact(models.Model):
     business = models.ForeignKey(Business, on_delete=models.CASCADE)

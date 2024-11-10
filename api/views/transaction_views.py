@@ -15,6 +15,31 @@ class SaleViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         return Sale.objects.filter(business__user=self.request.user)
 
+    @action(detail=False, methods=['post'])
+    def register_sale(self, request):
+        try:
+            with transaction.atomic():
+                # Añadir el business del usuario actual a los datos
+                data = request.data.copy()
+                data['business'] = request.user.business.id
+                
+                serializer = self.get_serializer(data=data)
+                if serializer.is_valid():
+                    sale = serializer.save()
+                    
+                    # Actualizar el stock del producto
+                    product = Product.objects.get(id=sale.product.id)
+                    product.stock -= sale.quantity
+                    product.save()
+                    
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {'detail': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
     @action(detail=True, methods=['post'])
     def undo_sale(self, request, pk=None):
         try:
@@ -55,6 +80,30 @@ class SaleViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+    def create(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                # Añadir el business del usuario actual a los datos
+                data = request.data.copy()
+                data['business'] = request.user.business.id
+                
+                serializer = self.get_serializer(data=data)
+                if serializer.is_valid():
+                    sale = serializer.save()
+                    
+                    # Actualizar el stock del producto
+                    product = Product.objects.get(id=sale.product.id)
+                    product.stock -= sale.quantity
+                    product.save()
+                    
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {'detail': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 class PurchaseViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
     serializer_class = PurchaseSerializer
     permission_classes = [IsAuthenticated]
@@ -63,14 +112,29 @@ class PurchaseViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         return Purchase.objects.filter(business__user=self.request.user)
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        return context
+
     @action(detail=False, methods=['post'])
     def register_purchase(self, request):
         try:
-            serializer = self.get_serializer(data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            with transaction.atomic():
+                # Añadir el business del usuario actual a los datos
+                data = request.data.copy()
+                data['business'] = request.user.business.id
+                
+                serializer = self.get_serializer(data=data)
+                if serializer.is_valid():
+                    purchase = serializer.save()
+                    
+                    # Actualizar el stock del producto
+                    product = Product.objects.get(id=purchase.product.id)
+                    product.stock += purchase.quantity
+                    product.save()
+                    
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(
                 {'detail': str(e)},
@@ -138,8 +202,22 @@ class PurchaseViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
             )
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            self.perform_create(serializer)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            with transaction.atomic():
+                serializer = self.get_serializer(data=request.data)
+                if serializer.is_valid():
+                    purchase = serializer.save()
+                    
+                    # Actualizar el stock del producto
+                    product = Product.objects.get(id=purchase.product.id)
+                    product.stock += purchase.quantity
+                    product.save()
+                    
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(f"Error en create purchase: {str(e)}")  # Para debugging
+            return Response(
+                {'detail': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
