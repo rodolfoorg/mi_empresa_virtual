@@ -1,32 +1,35 @@
 from rest_framework import permissions
 from django.utils import timezone
 from .models import License
-from rest_framework.exceptions import PermissionDenied
 
 class HasValidLicenseForPublic(permissions.BasePermission):
     """
-    Permiso que verifica si la licencia está activa para ver contenido público.
-    No permite ver contenido público si la licencia está expirada.
+    Permiso que filtra productos de negocios con licencias expiradas.
+    No requiere autenticación para ver productos públicos.
     """
     def has_permission(self, request, view):
-        # Si el usuario no está autenticado, no tiene acceso
-        if not request.user or not request.user.is_authenticated:
-            return False
-            
+        return True  # Permitir acceso inicial
+
+    def has_object_permission(self, request, view, obj):
         try:
-            license = License.objects.get(user=request.user)
+            # Obtener el usuario dueño del negocio
+            business_owner = obj.business.user if hasattr(obj, 'business') else None
+            if not business_owner:
+                return False  # Si no tiene negocio asociado, no mostrar
+            
+            # Verificar si el usuario tiene una licencia
+            license = License.objects.filter(user=business_owner).first()
+            
+            # Si no tiene licencia, no mostrar
+            if not license:
+                return False
+            
+            # Verificar si la licencia está vigente
             now = timezone.now()
+            return license.expiration_date > now
             
-            # Si la licencia está expirada, no permitir acceso
-            if license.expiration_date <= now:
-                raise PermissionDenied(
-                    "Su licencia ha expirado. Por favor renueve su suscripción para ver contenido público."
-                )
-                
-            return True
-            
-        except License.DoesNotExist:
-            return False
+        except (AttributeError, License.DoesNotExist):
+            return False  # Si hay cualquier error, no mostrar
 
 class HasValidLicenseForReadOnly(permissions.BasePermission):
     """
@@ -48,9 +51,7 @@ class HasValidLicenseForReadOnly(permissions.BasePermission):
                 
             # Para operaciones de escritura, verificar si la licencia está vigente
             if license.expiration_date <= now:
-                raise PermissionDenied(
-                    "Su licencia ha expirado. Por favor renueve su suscripción para realizar esta operación."
-                )
+                return False
                 
             return True
             

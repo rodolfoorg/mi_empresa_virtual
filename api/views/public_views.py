@@ -2,16 +2,23 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
+from django.utils import timezone
 from ..models import Product, Business
 from ..serializers import ProductSerializer, BusinessSerializer
+from ..licencePersmission import HasValidLicenseForPublic
 
 
 class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ProductSerializer
     queryset = Product.objects.none()
+    permission_classes = [HasValidLicenseForPublic]
 
     def get_queryset(self):
+        # Primero filtramos productos públicos
         queryset = Product.objects.filter(is_public=True)
+        
+        # Filtramos productos de negocios con licencias válidas
+        queryset = queryset.filter(business__user__license__expiration_date__gt=timezone.now())
         
         # Búsqueda por nombre o descripción
         search = self.request.query_params.get('search', None)
@@ -41,13 +48,16 @@ class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['get'])
     def categories(self, request):
         """Obtener todas las categorías disponibles"""
-        categories = Product.objects.filter(is_public=True).values_list(
-            'category', flat=True).distinct()
+        categories = Product.objects.filter(
+            is_public=True,
+            business__user__license__expiration_date__gt=timezone.now()
+        ).values_list('category', flat=True).distinct()
         return Response(list(categories))
 
 class PublicBusinessViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = BusinessSerializer
     queryset = Business.objects.none()
+    permission_classes = [HasValidLicenseForPublic]
 
     def get_queryset(self):
         queryset = Business.objects.filter(is_public=True)
