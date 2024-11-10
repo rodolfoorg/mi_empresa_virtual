@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
@@ -10,40 +10,37 @@ from ..licencePersmission import HasValidLicenseForPublic
 
 class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ProductSerializer
-    queryset = Product.objects.none()
+    queryset = Product.objects.all()
     permission_classes = [HasValidLicenseForPublic]
 
     def get_queryset(self):
-        # Primero filtramos productos públicos
-        queryset = Product.objects.filter(is_public=True)
+        # Primero filtramos productos públicos y hacemos select_related para optimizar
+        queryset = Product.objects.filter(
+            is_public=True
+        ).select_related('business', 'business__user')
         
         # Filtramos productos de negocios con licencias válidas
-        queryset = queryset.filter(business__user__license__expiration_date__gt=timezone.now())
+        queryset = queryset.filter(
+            business__user__license__expiration_date__gt=timezone.now()
+        )
         
-        # Búsqueda por nombre o descripción
-        search = self.request.query_params.get('search', None)
-        if search:
-            queryset = queryset.filter(
-                Q(name__icontains=search) |
-                Q(description__icontains=search)
-            )
+        return queryset
+
+    def get_serializer_class(self):
+        class PublicProductWithBusinessSerializer(ProductSerializer):
+            business_id = serializers.IntegerField(source='business.id', read_only=True)
+            business_name = serializers.CharField(source='business.name', read_only=True)
+            
+            class Meta(ProductSerializer.Meta):
+                fields = ProductSerializer.Meta.fields + ['business_id', 'business_name']
         
-        # Filtrar por categoría
-        category = self.request.query_params.get('category', None)
-        if category:
-            queryset = queryset.filter(category=category)
-            
-        # Filtrar por rango de precios
-        min_price = self.request.query_params.get('min_price', None)
-        max_price = self.request.query_params.get('max_price', None)
-        if min_price:
-            queryset = queryset.filter(price__gte=min_price)
-        if max_price:
-            queryset = queryset.filter(price__lte=max_price)
-            
-        # Ordenar resultados
-        ordering = self.request.query_params.get('ordering', '-created_at')
-        return queryset.order_by(ordering)
+        return PublicProductWithBusinessSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['include_business_id'] = True
+        context['include_business_details'] = True
+        return context
 
     @action(detail=False, methods=['get'])
     def categories(self, request):
@@ -56,11 +53,15 @@ class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
 
 class PublicBusinessViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = BusinessSerializer
-    queryset = Business.objects.none()
+    queryset = Business.objects.all()
     permission_classes = [HasValidLicenseForPublic]
 
     def get_queryset(self):
-        queryset = Business.objects.filter(is_public=True)
+        # Filtrar negocios públicos con licencias válidas
+        queryset = Business.objects.filter(
+            is_public=True,
+            user__license__expiration_date__gt=timezone.now()
+        )
         
         # Búsqueda por nombre o descripción
         search = self.request.query_params.get('search', None)
@@ -96,13 +97,17 @@ class PublicBusinessViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['get'])
     def types(self, request):
         """Obtener todos los tipos de negocios disponibles"""
-        business_types = Business.objects.filter(is_public=True).values_list(
-            'business_type', flat=True).distinct()
+        business_types = Business.objects.filter(
+            is_public=True,
+            user__license__expiration_date__gt=timezone.now()
+        ).values_list('business_type', flat=True).distinct()
         return Response(list(business_types))
 
     @action(detail=False, methods=['get'])
     def locations(self, request):
         """Obtener todas las ubicaciones disponibles"""
-        locations = Business.objects.filter(is_public=True).values_list(
-            'location', flat=True).distinct()
-        return Response(list(locations)) 
+        locations = Business.objects.filter(
+            is_public=True,
+            user__license__expiration_date__gt=timezone.now()
+        ).values_list('location', flat=True).distinct()
+        return Response(list(locations))

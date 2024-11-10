@@ -30,13 +30,3 @@ class BusinessViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-
-class PublicBusinessViewSet(viewsets.ReadOnlyModelViewSet):
-    permission_classes = [IsAuthenticated, HasValidLicenseForPublic]
-    serializer_class = BusinessSerializer
-    queryset = Business.objects.none()
-
-    def get_queryset(self):
-        return Business.objects.filter(is_public=True)
-
-    # ... resto de los métodos 

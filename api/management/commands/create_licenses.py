@@ -22,8 +22,6 @@ class Command(BaseCommand):
                 plan='basico',
                 start_date=timezone.now(),
                 expiration_date=expiration,
-                active=True,
-                notes='Licencia básica de prueba por 7 días'
             )
             licenses_created += 1
             self.stdout.write(f"Licencia básica creada para: {user.username}")
