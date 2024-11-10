@@ -8,7 +8,9 @@ from django.contrib.auth import authenticate
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = '__all__'  
+        fields = ['id', 'name', 'description', 'category', 'purchase_price', 
+                 'sale_price', 'is_public', 'stock', 'created_at', 'image']
+        read_only_fields = ['business']
 
 class SaleSerializer(serializers.ModelSerializer):
     class Meta:

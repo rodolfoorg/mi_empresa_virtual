@@ -16,14 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from api.views import api_welcome, CustomAuthToken, LogoutView
+from api.views import CustomAuthToken
+from django.contrib.auth.views import LogoutView
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', api_welcome, name='home'),  # Usa api_welcome directamente en la raíz
-    path('api/', include('api.urls')),  # Mantén las otras rutas de la API bajo /api/
+    path('api/', include('api.urls')),
     path('api/login/', CustomAuthToken.as_view(), name='api_token_auth'),
     path('api/logout/', LogoutView.as_view(), name='logout'),
 ]

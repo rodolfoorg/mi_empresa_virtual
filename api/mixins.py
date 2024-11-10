@@ -1,17 +1,43 @@
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from .models import Business
 
 class BusinessFilterMixin:
+    """
+    Mixin para filtrar automáticamente los objetos por el negocio del usuario autenticado
+    """
     def get_queryset(self):
-        queryset = super().get_queryset()
-        business_id = self.request.query_params.get('business_id') or self.request.data.get('business')
-        
-        if not business_id:
-            raise ValidationError({'business': 'This field is required'})
+        user = self.request.user
+        if not user.is_authenticated:
+            raise PermissionDenied("Usuario no autenticado")
             
-        return queryset.filter(business_id=business_id)
+        try:
+            business = user.business
+        except Business.DoesNotExist:
+            raise PermissionDenied("Usuario no tiene un negocio asociado")
+            
+        queryset = super().get_queryset()
+        return queryset.filter(business=business)
 
     def perform_create(self, serializer):
-        business_id = self.request.data.get('business')
-        if not business_id:
-            raise ValidationError({'business': 'This field is required'})
-        serializer.save(business_id=business_id) 
+        user = self.request.user
+        try:
+            user_business = user.business
+            serializer.save(business=user_business)
+        except Business.DoesNotExist:
+            raise ValidationError({
+                "detail": "No business found for current user",
+                "user_id": user.id,
+                "has_business": False
+            })
+
+    def perform_update(self, serializer):
+        user = self.request.user
+        try:
+            user_business = user.business
+            serializer.save(business=user_business)
+        except Business.DoesNotExist:
+            raise ValidationError({
+                "detail": "No business found for current user",
+                "user_id": user.id,
+                "has_business": False
+            })

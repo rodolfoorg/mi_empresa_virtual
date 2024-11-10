@@ -6,17 +6,21 @@ from io import BytesIO
 from django.core.files import File
 import uuid
 from django.core.exceptions import ValidationError
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-def validate_business_limit(user_id):
-    if Business.objects.filter(user_id=user_id).count() >= 2:
-        raise ValidationError('No puedes crear más de 2 negocios.')
-
-def validate_product_limit(business_id):
-    if Product.objects.filter(business_id=business_id).count() >= 100:
-        raise ValidationError('No puedes crear más de 100 productos por negocio.')
+def validate_product_limit(business_id, license_type):
+    product_count = Product.objects.filter(business_id=business_id).count()
+    limits = {
+        'basico': 50,
+        'avanzado': 100, 
+        'pro': 500
+    }
+    if product_count >= limits[license_type]:
+        raise ValidationError(f'No puedes crear más de {limits[license_type]} productos con el plan {license_type}.')
 
 class Business(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)  # Cambiado a OneToOneField
     owner = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
     phone = models.CharField(max_length=15, null=True, blank=True, default="No especificado")
@@ -30,15 +34,10 @@ class Business(models.Model):
     image = models.ImageField(upload_to='business_images/', null=True, blank=True)
 
     class Meta:
-        unique_together = ['user', 'name']
-
-    def clean(self):
-        if not self.pk:  # Solo validar al crear nuevo negocio
-            validate_business_limit(self.user_id)
-        super().clean()
+        # Eliminamos unique_together ya que OneToOneField ya garantiza la unicidad
+        pass
 
     def save(self, *args, **kwargs):
-        self.clean()
         super().save(*args, **kwargs)
 
 class Product(models.Model):
@@ -58,7 +57,8 @@ class Product(models.Model):
 
     def clean(self):
         if not self.pk:  # Solo validar al crear nuevo producto
-            validate_product_limit(self.business_id)
+            license = License.objects.get(user=self.business.user)
+            validate_product_limit(self.business_id, license.plan)
         super().clean()
 
     def save(self, *args, **kwargs):
@@ -118,11 +118,33 @@ def get_expiration_date():
     return timezone.now() + timezone.timedelta(days=7)
 
 class License(models.Model):
+    PLAN_CHOICES = [
+        ('basico', 'Básico'),
+        ('avanzado', 'Avanzado'),
+        ('pro', 'Pro')
+    ]
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    plan = models.CharField(max_length=10, choices=PLAN_CHOICES, default='basico')
     start_date = models.DateTimeField(default=timezone.now)
     expiration_date = models.DateTimeField(default=get_expiration_date)
-    active = models.BooleanField(default=True)
-    notes = models.TextField(blank=True, null=True)
+
+    @property
+    def tiempo_restante(self):
+        ahora = timezone.now()
+        if self.expiration_date > ahora:
+            return self.expiration_date - ahora
+        return timezone.timedelta(0)
+
+@receiver(post_save, sender=User)
+def crear_licencia_basica(sender, instance, created, **kwargs):
+    if created:
+        License.objects.create(
+            user=instance,
+            plan='basico',
+            start_date=timezone.now(),
+            expiration_date=timezone.now() + timezone.timedelta(days=7)
+        )
 
 def redimensionar_imagen(imagen, ancho=800, alto=600):
     if not imagen:
