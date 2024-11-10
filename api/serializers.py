@@ -220,6 +220,8 @@ class LoginSerializer(serializers.Serializer):
                     raise serializers.ValidationError(
                         'Esta cuenta no está activada'
                     )
+                data['user'] = user
+                return data
             else:
                 raise serializers.ValidationError(
                     'Credenciales incorrectas'
@@ -228,6 +230,3 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Debe proporcionar tanto usuario/email como contraseña'
             )
-
-        data['user'] = user
-        return data

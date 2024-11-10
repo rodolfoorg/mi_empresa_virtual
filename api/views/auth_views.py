@@ -43,10 +43,16 @@ class AuthViewSet(viewsets.ViewSet):
                 'error': 'Credenciales inválidas'
             }, status=status.HTTP_401_UNAUTHORIZED)
 
+        if not user.is_active:
+            return Response({
+                'error': 'Esta cuenta no está activada'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
         token, _ = Token.objects.get_or_create(user=user)
         
         return Response({
             'token': token.key,
+            'user_id': user.id,
             'username': user.username,
             'email': user.email
         })
@@ -93,16 +99,17 @@ class AuthViewSet(viewsets.ViewSet):
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-            user = serializer.validated_data['user']
-            token, _ = Token.objects.get_or_create(user=user)
-            return Response({
-                'token': token.key,
-                'username': user.username,
-                'email': user.email
-            })
-        except Exception as e:
+        if not serializer.is_valid():
             return Response({
                 'error': 'Credenciales inválidas'
             }, status=status.HTTP_401_UNAUTHORIZED)
+            
+        user = serializer.validated_data['user']
+        token, _ = Token.objects.get_or_create(user=user)
+        
+        return Response({
+            'token': token.key,
+            'user_id': user.id,
+            'username': user.username,
+            'email': user.email
+        })
