@@ -6,6 +6,11 @@ import re
 from django.contrib.auth import authenticate
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.contrib.auth.tokens import default_token_generator
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
@@ -185,6 +190,7 @@ class UserSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        # Simplificar el create, solo crear el usuario
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],

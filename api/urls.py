@@ -13,7 +13,7 @@ from .views import (
     PurchaseViewSet,
     PublicBusinessViewSet,
     PublicProductViewSet,
-    AuthViewSet
+    AuthViewSet,
 )
 
 # Crear el router
