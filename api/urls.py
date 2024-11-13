@@ -17,6 +17,7 @@ from .views import (
     public_views,
 )
 from .views.order_views import OrderViewSet
+from .views.user_views import UserProfileView
 
 # Crear el router
 router = DefaultRouter()
@@ -43,4 +44,5 @@ urlpatterns = [
     path('orders/track/<str:tracking_code>/', 
          public_views.track_order, 
          name='track-order'),
+    path('user/profile/', UserProfileView.as_view(), name='user-profile'),
 ]

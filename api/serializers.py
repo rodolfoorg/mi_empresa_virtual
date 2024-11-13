@@ -121,7 +121,25 @@ class ExpenseSerializer(serializers.ModelSerializer):
 class CardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Card
-        fields = '__all__'  
+        fields = ['id', 'name', 'number', 'balance', 'business']
+        read_only_fields = ['business']
+
+    def validate(self, data):
+        # Asegurar que balance tenga un valor por defecto si no se proporciona
+        if 'balance' not in data:
+            data['balance'] = 0
+        return data
+
+    def validate_balance(self, value):
+        if value < 0:
+            raise serializers.ValidationError("El balance no puede ser negativo")
+        return value
+
+    def to_representation(self, instance):
+        # Para mostrar el balance formateado en la respuesta
+        representation = super().to_representation(instance)
+        representation['balance'] = float(representation['balance'])
+        return representation
 
 class ContactSerializer(serializers.ModelSerializer):
     class Meta:
@@ -149,58 +167,20 @@ class LicenseRenewalSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name','date_joined']
+        read_only_fields = ['username', 'email']  # No permitir cambios en estos campos
         extra_kwargs = {
             'password': {'write_only': True},
-            'email': {
-                'required': True,
-                'validators': [
-                    UniqueValidator(
-                        queryset=User.objects.all(),
-                        message='Ya existe un usuario con este correo electrónico'
-                    )
-                ]
-            }
+            'email': {'required': False},
+            'username': {'required': False}
         }
 
-    def validate_username(self, value):
-        # Verificar longitud mínima
-        if len(value) < 3:
-            raise serializers.ValidationError(
-                'El nombre de usuario debe tener al menos 3 caracteres'
-            )
-        
-        # Verificar que no empiece con número
-        if value[0].isdigit():
-            raise serializers.ValidationError(
-                'El nombre de usuario no puede empezar con un número'
-            )
-        
-        # Verificar caracteres permitidos
-        if not all(c.isalnum() or c == '_' for c in value):
-            raise serializers.ValidationError(
-                'El nombre de usuario solo puede contener letras, números y guión bajo (_)'
-            )
-        
-        return value
-
-    def validate_email(self, value):
-        # Validar formato de email
-        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', value):
-            raise serializers.ValidationError(
-                'Por favor, introduce una dirección de correo electrónico válida'
-            )
-        return value
-
-    def create(self, validated_data):
-        # Simplificar el create, solo crear el usuario
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            password=validated_data['password'],
-            is_active=False
-        )
-        return user
+    def update(self, instance, validated_data):
+        # Actualizar solo los campos permitidos
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.save()
+        return instance
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(write_only=True)
@@ -262,7 +242,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'delivery_type_display', 'delivery_address',
             'delivery_municipality', 'delivery_notes', 'pickup_time',
             'status', 'status_display', 'created_at', 'updated_at',
-            'total_amount', 'items'
+            'total_amount', 'items', 'status_notes'
         ]
         read_only_fields = ['tracking_code', 'business', 'business_name']
 

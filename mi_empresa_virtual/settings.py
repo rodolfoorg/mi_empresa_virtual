@@ -138,6 +138,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://mis.finanzas.e-comcuba.com",
     "https://timbiriche.e-comcuba.com",
     "https://e-comcuba.com",
+    "http://192.168.30.179:3000",
 ]
 
 CORS_ALLOW_METHODS = [
@@ -207,3 +208,9 @@ DEFAULT_FROM_EMAIL = '_mainaccount@e-comcuba.com'
 # Configuraciones adicionales recomendadas
 EMAIL_TIMEOUT = 30  # timeout en segundos
 EMAIL_DEBUG = True  # para ver logs de emails durante desarrollo
+
+# # Permitir todos los CORS
+# CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_CREDENTIALS = True
+# CORS_ORIGIN_ALLOW_ALL = True
+# ALLOWED_HOSTS = ['*']
