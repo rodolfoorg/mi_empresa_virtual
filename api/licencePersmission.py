@@ -8,28 +8,22 @@ class HasValidLicenseForPublic(permissions.BasePermission):
     No requiere autenticación para ver productos públicos.
     """
     def has_permission(self, request, view):
-        return True  # Permitir acceso inicial
+        # Para métodos de solo lectura (GET, HEAD, OPTIONS), permitir acceso
+        if request.method in permissions.SAFE_METHODS:
+            return True
+            
+        return False  # Denegar otros métodos
 
     def has_object_permission(self, request, view, obj):
-        try:
-            # Obtener el usuario dueño del negocio
-            business_owner = obj.business.user if hasattr(obj, 'business') else None
-            if not business_owner:
-                return False  # Si no tiene negocio asociado, no mostrar
-            
-            # Verificar si el usuario tiene una licencia
-            license = License.objects.filter(user=business_owner).first()
-            
-            # Si no tiene licencia, no mostrar
-            if not license:
-                return False
-            
-            # Verificar si la licencia está vigente
-            now = timezone.now()
-            return license.expiration_date > now
-            
-        except (AttributeError, License.DoesNotExist):
-            return False  # Si hay cualquier error, no mostrar
+        # Para métodos de solo lectura (GET, HEAD, OPTIONS), permitir acceso
+        if request.method in permissions.SAFE_METHODS:
+            # Verificar si el negocio es público y tiene licencia válida
+            if hasattr(obj, 'is_public'):
+                return obj.is_public
+            elif hasattr(obj, 'business'):
+                return obj.business.is_public
+                
+        return False  # Denegar otros métodos
 
 class HasValidLicenseForReadOnly(permissions.BasePermission):
     """

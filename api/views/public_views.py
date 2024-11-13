@@ -1,30 +1,23 @@
-from rest_framework import viewsets, status, serializers
-from rest_framework.decorators import action
+from rest_framework import viewsets, status, serializers, permissions
+from rest_framework.decorators import action, permission_classes
 from rest_framework.response import Response
 from django.db.models import Q
 from django.utils import timezone
 from ..models import Product, Business
 from ..serializers import ProductSerializer, BusinessSerializer
-from ..licencePersmission import HasValidLicenseForPublic
 
 
 class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ProductSerializer
-    queryset = Product.objects.all()
-    permission_classes = [HasValidLicenseForPublic]
+    permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        # Primero filtramos productos públicos y hacemos select_related para optimizar
-        queryset = Product.objects.filter(
-            is_public=True
+        return Product.objects.filter(
+            Q(is_public=True) &  # Producto público
+            Q(business__is_public=True) &  # Negocio público
+            Q(business__user__license__expiration_date__gt=timezone.now()) &  # Licencia válida
+            ~Q(business__isnull=True)  # Asegurarse de que el negocio existe
         ).select_related('business', 'business__user')
-        
-        # Filtramos productos de negocios con licencias válidas
-        queryset = queryset.filter(
-            business__user__license__expiration_date__gt=timezone.now()
-        )
-        
-        return queryset
 
     def get_serializer_class(self):
         class PublicProductWithBusinessSerializer(ProductSerializer):
@@ -53,35 +46,13 @@ class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
 
 class PublicBusinessViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = BusinessSerializer
-    queryset = Business.objects.all()
-    permission_classes = [HasValidLicenseForPublic]
+    permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        # Filtrar negocios públicos con licencias válidas
-        queryset = Business.objects.filter(
+        return Business.objects.filter(
             is_public=True,
             user__license__expiration_date__gt=timezone.now()
         )
-        
-        # Búsqueda por nombre o descripción
-        search = self.request.query_params.get('search', None)
-        if search:
-            queryset = queryset.filter(
-                Q(name__icontains=search) |
-                Q(description__icontains=search)
-            )
-            
-        # Filtrar por tipo de negocio
-        business_type = self.request.query_params.get('type', None)
-        if business_type:
-            queryset = queryset.filter(business_type=business_type)
-            
-        # Filtrar por ubicación
-        location = self.request.query_params.get('location', None)
-        if location:
-            queryset = queryset.filter(location__icontains=location)
-            
-        return queryset
 
     @action(detail=True, methods=['get'])
     def products(self, request, pk=None):
@@ -89,7 +60,8 @@ class PublicBusinessViewSet(viewsets.ReadOnlyModelViewSet):
         business = self.get_object()
         products = Product.objects.filter(
             business=business,
-            is_public=True
+            is_public=True,
+            business__is_public=True
         )
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
