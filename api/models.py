@@ -9,6 +9,8 @@ from django.core.exceptions import ValidationError
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import MinValueValidator
+import random
+import string
 
 def validate_product_limit(business_id, license_type):
     product_count = Product.objects.filter(business_id=business_id).count()
@@ -218,3 +220,67 @@ class LicenseRenewal(models.Model):
 
     class Meta:
         ordering = ['-requested_at']
+
+def generate_order_code():
+    # Genera un código de 8 caracteres alfanuméricos
+    length = 8
+    characters = string.ascii_uppercase + string.digits
+    while True:
+        code = ''.join(random.choices(characters, k=length))
+        # Verificar que el código no exista
+        if not Order.objects.filter(tracking_code=code).exists():
+            return code
+
+class Order(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pendiente'),
+        ('confirmed', 'Confirmado'),
+        ('preparing', 'En preparación'),
+        ('ready', 'Listo para entrega/recogida'),
+        ('in_delivery', 'En camino'),
+        ('delivered', 'Entregado'),
+        ('cancelled', 'Cancelado')
+    ]
+
+    DELIVERY_CHOICES = [
+        ('pickup', 'Recoger en tienda'),
+        ('delivery', 'Entrega a domicilio')
+    ]
+
+    # Código de seguimiento
+    tracking_code = models.CharField(
+        max_length=8, 
+        unique=True, 
+        default=generate_order_code,
+        editable=False
+    )
+
+    # Resto del modelo...
+    business = models.ForeignKey(Business, on_delete=models.CASCADE)
+    customer_name = models.CharField(max_length=100)
+    customer_phone = models.CharField(max_length=15)
+    delivery_type = models.CharField(max_length=10, choices=DELIVERY_CHOICES)
+    delivery_address = models.TextField(null=True, blank=True)
+    delivery_municipality = models.CharField(max_length=100, null=True, blank=True)
+    delivery_notes = models.TextField(null=True, blank=True)
+    pickup_time = models.TimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
+    # Agregar campos de tiempo y total
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+class OrderItem(models.Model):
+    order = models.ForeignKey('Order', related_name='items', on_delete=models.CASCADE)
+    product = models.ForeignKey('Product', on_delete=models.PROTECT)
+    quantity = models.PositiveIntegerField()
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
+
+    def save(self, *args, **kwargs):
+        self.subtotal = self.quantity * self.unit_price
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.product.name} x {self.quantity}"

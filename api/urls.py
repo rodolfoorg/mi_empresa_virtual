@@ -14,7 +14,9 @@ from .views import (
     PublicBusinessViewSet,
     PublicProductViewSet,
     AuthViewSet,
+    public_views,
 )
+from .views.order_views import OrderViewSet
 
 # Crear el router
 router = DefaultRouter()
@@ -33,8 +35,12 @@ router.register(r'licenses', LicenseViewSet)
 router.register(r'public-businesses', PublicBusinessViewSet, basename='public-businesses')
 router.register(r'auth', AuthViewSet, basename='auth')  # Nueva vista para autenticación
 router.register(r'license-renewals', LicenseRenewalViewSet)
+router.register(r'orders', OrderViewSet, basename='order')
 
 # Definir las rutas
 urlpatterns = [
     path('', include(router.urls)),
+    path('orders/track/<str:tracking_code>/', 
+         public_views.track_order, 
+         name='track-order'),
 ]

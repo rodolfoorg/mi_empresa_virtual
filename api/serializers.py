@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from api.models import *
+from .models import (
+    Product, Sale, Business, Purchase, Expense, Card, Contact, License,
+    LicenseRenewal, Order, OrderItem
+)
 from django.contrib.auth.models import User
 from rest_framework.validators import UniqueValidator
 import re
@@ -236,3 +239,62 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Debe proporcionar tanto usuario/email como contraseña'
             )
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    
+    class Meta:
+        model = OrderItem
+        fields = ['id', 'product', 'product_name', 'quantity', 'unit_price', 'subtotal']
+        read_only_fields = ['subtotal']
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    delivery_type_display = serializers.CharField(source='get_delivery_type_display', read_only=True)
+    business_name = serializers.CharField(source='business.name', read_only=True)
+
+    class Meta:
+        model = Order
+        fields = [
+            'id', 'tracking_code', 'business', 'business_name',
+            'customer_name', 'customer_phone', 'delivery_type',
+            'delivery_type_display', 'delivery_address',
+            'delivery_municipality', 'delivery_notes', 'pickup_time',
+            'status', 'status_display', 'created_at', 'updated_at',
+            'total_amount', 'items'
+        ]
+        read_only_fields = ['tracking_code', 'business', 'business_name']
+
+    def create(self, validated_data):
+        business = self.context.get('business')
+        if not business:
+            raise serializers.ValidationError({'business': 'Se requiere el negocio'})
+        
+        validated_data['business'] = business
+        return super().create(validated_data)
+
+    def validate(self, data):
+        # Validar que haya items
+        if not self.initial_data.get('items', []):
+            raise serializers.ValidationError({
+                'items': 'Debe incluir al menos un producto en el pedido'
+            })
+        
+        # Validar tipo de entrega
+        if data['delivery_type'] == 'delivery':
+            if not data.get('delivery_address'):
+                raise serializers.ValidationError({
+                    'delivery_address': 'La dirección es requerida para entregas a domicilio'
+                })
+            if not data.get('delivery_municipality'):
+                raise serializers.ValidationError({
+                    'delivery_municipality': 'El municipio es requerido para entregas a domicilio'
+                })
+        else:  # pickup
+            if not data.get('pickup_time'):
+                raise serializers.ValidationError({
+                    'pickup_time': 'La hora de recogida es requerida'
+                })
+        
+        return data
