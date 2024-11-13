@@ -271,6 +271,12 @@ class Order(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
+    status_notes = models.TextField(
+        null=True, 
+        blank=True, 
+        help_text="Notas sobre el cambio de estado del pedido"
+    )
+
 class OrderItem(models.Model):
     order = models.ForeignKey('Order', related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey('Product', on_delete=models.PROTECT)

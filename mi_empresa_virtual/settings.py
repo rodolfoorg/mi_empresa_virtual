@@ -209,8 +209,8 @@ DEFAULT_FROM_EMAIL = '_mainaccount@e-comcuba.com'
 EMAIL_TIMEOUT = 30  # timeout en segundos
 EMAIL_DEBUG = True  # para ver logs de emails durante desarrollo
 
-# # Permitir todos los CORS
-# CORS_ALLOW_ALL_ORIGINS = True
-# CORS_ALLOW_CREDENTIALS = True
-# CORS_ORIGIN_ALLOW_ALL = True
-# ALLOWED_HOSTS = ['*']
+# Permitir todos los CORS
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = True
+ALLOWED_HOSTS = ['*']

@@ -7,6 +7,7 @@ from ..models import Order, Business, OrderItem, Product
 from ..serializers import OrderSerializer
 from rest_framework.decorators import action
 from django.db import transaction
+from django.utils import timezone
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
@@ -143,7 +144,47 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['patch'])
     def status(self, request, pk=None):
         order = self.get_object()
-        order.status = request.data.get('status')
+        new_status = request.data.get('status')
+        notes = request.data.get('notes')
+
+        if new_status:
+            order.status = new_status
+            
+        if notes:
+            # Agregar timestamp a las notas
+            timestamp = timezone.now().strftime("%d/%m/%Y %H:%M")
+            status_text = order.get_status_display()
+            new_note = f"[{timestamp} - {status_text}] {notes}"
+            
+            if order.status_notes:
+                order.status_notes = f"{new_note}\n\n{order.status_notes}"
+            else:
+                order.status_notes = new_note
+
         order.save()
+
+        # Notificar por email del cambio de estado
+        try:
+            subject = f'Actualización de pedido - {order.tracking_code}'
+            message = f'''
+            Actualización de tu pedido en {order.business.name}
+
+            Estado: {order.get_status_display()}
+            
+            Notas: {notes if notes else 'No se agregaron notas'}
+
+            Código de seguimiento: {order.tracking_code}
+            '''
+
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[order.business.user.email],
+                fail_silently=True,
+            )
+        except Exception as e:
+            print(f"Error al enviar email: {str(e)}")
+
         serializer = self.get_serializer(order)
         return Response(serializer.data)
