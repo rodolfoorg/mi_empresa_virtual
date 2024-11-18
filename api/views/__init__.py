@@ -9,6 +9,8 @@ from .business_views import BusinessViewSet
 from .product_views import ProductViewSet
 from .contact_views import ContactViewSet
 from .public_views import PublicProductViewSet, PublicBusinessViewSet
+from .business_settings_views import BusinessSettingsViewSet, PublicBusinessSettingsViewSet
+from .order_views import OrderViewSet
 
 @api_view(['GET'])
 def api_welcome(request):
@@ -38,4 +40,7 @@ __all__ = [
     'LicenseViewSet',
     'LicenseRenewalViewSet',
     'UserViewSet',
+    'BusinessSettingsViewSet',
+    'PublicBusinessSettingsViewSet',
+    'OrderViewSet',
 ]

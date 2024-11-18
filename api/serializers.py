@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     Product, Sale, Business, Purchase, Expense, Card, Contact, License,
-    LicenseRenewal, Order, OrderItem
+    LicenseRenewal, Order, OrderItem, BusinessSettings
 )
 from django.contrib.auth.models import User
 from rest_framework.validators import UniqueValidator
@@ -278,3 +278,71 @@ class OrderSerializer(serializers.ModelSerializer):
                 })
         
         return data
+
+class BusinessSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BusinessSettings
+        fields = '__all__'
+        read_only_fields = ['business']
+
+    def validate_theme_color(self, value):
+        if not value.startswith('#'):
+            value = f'#{value}'
+        if not re.match(r'^#(?:[0-9a-fA-F]{3}){1,2}$', value):
+            raise serializers.ValidationError("Color inválido. Debe ser un código hexadecimal válido")
+        return value
+
+    def validate_secondary_color(self, value):
+        if not value.startswith('#'):
+            value = f'#{value}'
+        if not re.match(r'^#(?:[0-9a-fA-F]{3}){1,2}$', value):
+            raise serializers.ValidationError("Color inválido. Debe ser un código hexadecimal válido")
+        return value
+
+    def validate_business_hours(self, value):
+        required_days = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
+        if not all(day in value for day in required_days):
+            raise serializers.ValidationError("Debe incluir todos los días de la semana")
+        
+        for day, config in value.items():
+            if not isinstance(config, dict) or 'abierto' not in config:
+                raise serializers.ValidationError(f"Configuración inválida para {day}")
+            
+            if config['abierto'] and ('horario' not in config or not isinstance(config['horario'], list)):
+                raise serializers.ValidationError(f"Horario inválido para {day}")
+        
+        return value
+
+    def validate_delivery_zones(self, value):
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("Las zonas de entrega deben ser un objeto JSON válido")
+        
+        for zone, price in value.items():
+            if not isinstance(price, (int, float)) or price < 0:
+                raise serializers.ValidationError(f"Precio inválido para la zona {zone}")
+        
+        return value
+
+    def validate_facebook_url(self, value):
+        if value and not value.startswith(('http://', 'https://')):
+            value = f'https://{value}'
+        return value or ''
+
+    def validate_instagram_url(self, value):
+        if value and not value.startswith(('http://', 'https://')):
+            value = f'https://{value}'
+        return value or ''
+
+    def validate_whatsapp_number(self, value):
+        if value:
+            # Eliminar todos los caracteres no numéricos excepto +
+            value = ''.join(filter(lambda x: x.isdigit() or x == '+', value))
+            if not value.startswith('+'):
+                value = '+' + value
+        return value or ''
+
+    def validate_telegram_user(self, value):
+        if value:
+            if not value.startswith('@'):
+                value = '@' + value
+        return value or ''

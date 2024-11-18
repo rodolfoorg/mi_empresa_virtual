@@ -12,6 +12,7 @@ from django.core.validators import MinValueValidator
 import random
 import string
 
+
 def validate_product_limit(business_id, license_type):
     product_count = Product.objects.filter(business_id=business_id).count()
     limits = {
@@ -290,3 +291,58 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.product.name} x {self.quantity}"
+
+class BusinessSettings(models.Model):
+    business = models.OneToOneField(
+        Business,
+        on_delete=models.CASCADE,
+        related_name='settings'
+    )
+    does_delivery = models.BooleanField(default=True)
+    delivery_zones = models.JSONField(default=dict)
+    business_hours = models.JSONField(default=dict)
+    theme_color = models.CharField(max_length=7, default='#4F46E5')
+    secondary_color = models.CharField(max_length=7, default='#4F46E5')
+    banner_text = models.CharField(max_length=100, default='¡Bienvenido a nuestro negocio!')
+    use_gradient = models.BooleanField(default=False)
+    facebook_url = models.URLField(max_length=200, null=True, blank=True)
+    instagram_url = models.URLField(max_length=200, null=True, blank=True)
+    whatsapp_number = models.CharField(max_length=20, null=True, blank=True)
+    telegram_user = models.CharField(max_length=50, null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Configuración de negocio'
+        verbose_name_plural = 'Configuraciones de negocios'
+
+    def __str__(self):
+        return f"Configuración de {self.business.name}"
+
+    def save(self, *args, **kwargs):
+        if not self.business_hours:
+            self.business_hours = {
+                "lunes": {"abierto": True, "horario": [{"apertura": "09:00", "cierre": "18:00"}]},
+                "martes": {"abierto": True, "horario": [{"apertura": "09:00", "cierre": "18:00"}]},
+                "miercoles": {"abierto": True, "horario": [{"apertura": "09:00", "cierre": "18:00"}]},
+                "jueves": {"abierto": True, "horario": [{"apertura": "09:00", "cierre": "18:00"}]},
+                "viernes": {"abierto": True, "horario": [{"apertura": "09:00", "cierre": "18:00"}]},
+                "sabado": {"abierto": True, "horario": [{"apertura": "09:00", "cierre": "13:00"}]},
+                "domingo": {"abierto": False, "horario": []}
+            }
+        super().save(*args, **kwargs)
+
+@receiver(post_save, sender=Business)
+def crear_configuracion_negocio(sender, instance, created, **kwargs):
+    if created:
+        BusinessSettings.objects.create(
+            business=instance,
+            business_hours={
+                "lunes": {"abierto": True, "horario": [{"apertura": "09:00", "cierre": "18:00"}]},
+                "martes": {"abierto": True, "horario": [{"apertura": "09:00", "cierre": "18:00"}]},
+                "miercoles": {"abierto": True, "horario": [{"apertura": "09:00", "cierre": "18:00"}]},
+                "jueves": {"abierto": True, "horario": [{"apertura": "09:00", "cierre": "18:00"}]},
+                "viernes": {"abierto": True, "horario": [{"apertura": "09:00", "cierre": "18:00"}]},
+                "sabado": {"abierto": True, "horario": [{"apertura": "09:00", "cierre": "13:00"}]},
+                "domingo": {"abierto": False, "horario": []}
+            },
+            delivery_zones={}  # Inicialmente vacío para que el usuario agregue sus propias zonas
+        )

@@ -11,6 +11,7 @@ from django.utils import timezone
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
         if self.action == 'create':
@@ -18,9 +19,9 @@ class OrderViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
 
     def get_queryset(self):
-        if self.request.user.is_authenticated:
-            return Order.objects.filter(business=self.request.user.business)
-        return Order.objects.none()
+        return Order.objects.filter(
+            business__owner=self.request.user
+        ).order_by('-created_at')
 
     def create(self, request, *args, **kwargs):
         business_id = request.data.get('business')

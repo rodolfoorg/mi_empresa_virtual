@@ -55,10 +55,7 @@ class PublicBusinessViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        return Business.objects.filter(
-            is_public=True,
-            user__license__expiration_date__gt=timezone.now()
-        )
+        return Business.objects.filter(is_public=True)
 
     @action(detail=True, methods=['get'])
     def products(self, request, pk=None):
