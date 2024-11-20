@@ -99,7 +99,7 @@ class Card(models.Model):
 
 class Sale(models.Model):
     business = models.ForeignKey(Business, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    Product = models.ManyToManyField(Product)
     contact = models.ForeignKey(Contact, on_delete=models.SET_NULL, null=True, blank=True)
     card = models.ForeignKey(Card, on_delete=models.SET_NULL, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
@@ -108,9 +108,12 @@ class Sale(models.Model):
     created_at = models.DateTimeField(default=timezone.now, blank=True)
     is_credit = models.BooleanField(default=False)
 
+
+
+
 class Purchase(models.Model):
     business = models.ForeignKey(Business, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    Product = models.ManyToManyField(Product)
     contact = models.ForeignKey(Contact, on_delete=models.SET_NULL, null=True, blank=True)
     card = models.ForeignKey(Card, on_delete=models.SET_NULL, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
