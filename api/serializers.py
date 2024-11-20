@@ -121,7 +121,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
 class CardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Card
-        fields = ['id', 'name', 'number', 'balance', 'business']
+        fields = ['id', 'name', 'number', 'balance', 'business', 'is_business']
         read_only_fields = ['business']
 
     def validate(self, data):

@@ -93,6 +93,7 @@ class Card(models.Model):
     number = models.CharField(max_length=16)
     balance = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(default=timezone.now, blank=True)
+    is_business = models.BooleanField(default=True)
 
     class Meta:
         unique_together = ['business', 'name']
