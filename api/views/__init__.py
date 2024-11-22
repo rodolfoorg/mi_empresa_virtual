@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .financial_views import CardViewSet, ExpenseViewSet
 from .user_views import UserViewSet
-from .auth_views import AuthViewSet, CustomAuthToken
+from .auth_views import AuthViewSet
 from .license_views import LicenseViewSet, LicenseRenewalViewSet
 from .transaction_views import SaleViewSet, PurchaseViewSet
 from .business_views import BusinessViewSet
