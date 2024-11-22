@@ -167,12 +167,11 @@ class LicenseRenewalSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name','date_joined']
-        read_only_fields = ['username', 'email']  # No permitir cambios en estos campos
+        fields = ['id', 'username', 'email', 'password', 'first_name', 'last_name','date_joined']
         extra_kwargs = {
             'password': {'write_only': True},
-            'email': {'required': False},
-            'username': {'required': False}
+            'email': {'required': True},
+            'username': {'required': True}
         }
 
     def update(self, instance, validated_data):

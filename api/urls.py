@@ -17,7 +17,6 @@ CardViewSet,
     public_views,
     BusinessSettingsViewSet,
     PublicBusinessSettingsViewSet,
-    CustomAuthToken,
     api_welcome,
     OrderViewSet
 )
@@ -41,12 +40,11 @@ router.register(r'cards', CardViewSet)
 router.register(r'contacts', ContactViewSet)
 router.register(r'licenses', LicenseViewSet)
 router.register(r'public-businesses', PublicBusinessViewSet, basename='public-businesses')
-router.register(r'auth', AuthViewSet, basename='auth')  # Nueva vista para autenticación
 router.register(r'license-renewals', LicenseRenewalViewSet)
 router.register(r'orders', OrderViewSet, basename='order')
+router.register(r'auth', AuthViewSet, basename='auth')
 
 urlpatterns = [
     path('', api_welcome),
     path('', include(router.urls)),
-    path('token-auth/', CustomAuthToken.as_view()),
 ]
