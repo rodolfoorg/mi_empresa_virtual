@@ -93,6 +93,59 @@ class SaleViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+    @action(detail=False, methods=['post'])
+    def batch(self, request):
+        sales_data = request.data
+        if not isinstance(sales_data, list):
+            return Response(
+                {'error': 'Se espera un array de ventas'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        results = []
+        errors = []
+
+        for index, sale_data in enumerate(sales_data):
+            try:
+                with transaction.atomic():
+                    # Añadir el business del usuario actual
+                    sale_data['business'] = request.user.business.id
+                    
+                    serializer = self.get_serializer(data=sale_data)
+                    if serializer.is_valid():
+                        sale = serializer.save()
+                        results.append(serializer.data)
+                    else:
+                        errors.append({
+                            'index': index,
+                            'errors': serializer.errors
+                        })
+                        raise ValidationError(serializer.errors)
+
+            except Exception as e:
+                if index not in [err['index'] for err in errors]:
+                    errors.append({
+                        'index': index,
+                        'errors': str(e)
+                    })
+
+        response_data = {
+            'success_count': len(results),
+            'error_count': len(errors),
+            'results': results,
+            'errors': errors
+        }
+
+        # Si hay errores pero también hay éxitos, retornamos 207 Multi-Status
+        if errors and results:
+            return Response(response_data, status=status.HTTP_207_MULTI_STATUS)
+        # Si todo fue exitoso
+        elif results and not errors:
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        # Si todo falló
+        else:
+            return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+
 class PurchaseViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
     serializer_class = PurchaseSerializer
     permission_classes = [IsAuthenticated]
