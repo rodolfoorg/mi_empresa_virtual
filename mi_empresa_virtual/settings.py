@@ -82,11 +82,23 @@ TEMPLATES = [
 WSGI_APPLICATION = 'mi_empresa_virtual.wsgi.application'
 
 
-# Database
+# Database Postgres
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'ecomcuba_db_ecomfinanz',
+#         'USER': 'ecomcuba_ecomfinanz',
+#         'PASSWORD': 'L8MoPrPUvl_',
+#         'HOST': 'localhost', 
+#         'PORT': '5432',
+#     }
+# }
+
+# Database SQLite
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',   
     }
 }
 
@@ -138,6 +150,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://mis.finanzas.e-comcuba.com",
     "https://timbiriche.e-comcuba.com",
     "https://e-comcuba.com",
+    "https://e-comfinanz.e-comcuba.com",
     "http://192.168.30.179:3000",
 ]
 
@@ -170,6 +183,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
     "https://e-comcuba.com",
+    "https://e-comfinanz.e-comcuba.com",
 ]
 
 # Configuración adicional de seguridad

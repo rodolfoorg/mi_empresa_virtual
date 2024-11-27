@@ -227,3 +227,53 @@ class PurchaseViewSet(BusinessFilterMixin, viewsets.ModelViewSet):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+    @action(detail=False, methods=['post'])
+    def batch(self, request):
+        purchases_data = request.data
+        if not isinstance(purchases_data, list):
+            return Response(
+                {'error': 'Se espera un array de compras'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        results = []
+        errors = []
+
+        for index, purchase_data in enumerate(purchases_data):
+            try:
+                with transaction.atomic():
+                    # Añadir el business del usuario actual
+                    purchase_data['business'] = request.user.business.id
+                    
+                    serializer = self.get_serializer(data=purchase_data)
+                    if serializer.is_valid():
+                        purchase = serializer.save()
+                        results.append(serializer.data)
+                    else:
+                        errors.append({
+                            'index': index,
+                            'errors': serializer.errors
+                        })
+                        raise ValidationError(serializer.errors)
+
+            except Exception as e:
+                if index not in [err['index'] for err in errors]:
+                    errors.append({
+                        'index': index,
+                        'errors': str(e)
+                    })
+
+        response_data = {
+            'success_count': len(results),
+            'error_count': len(errors),
+            'results': results,
+            'errors': errors
+        }
+
+        if errors and results:
+            return Response(response_data, status=status.HTTP_207_MULTI_STATUS)
+        elif results and not errors:
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
